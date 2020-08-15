@@ -1,0 +1,9 @@
+build
+[Dd]ebug
+[Rr]elease
+*.map
+*.obj
+*~
+*.suo
+*.swp
+.vs
