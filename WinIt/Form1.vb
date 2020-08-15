@@ -7,12 +7,13 @@
             .InnerBackground = New Drawing2D.LinearGradientBrush(New PointF(0, 0), New PointF(320, 240), Color.AntiqueWhite, Color.Transparent),
             .CornerRadius = 16,
             .BackColor = Color.Transparent,
-            .BorderPen = New Pen(New Drawing2D.LinearGradientBrush(New PointF(0, 0), New PointF(320, 240), Color.Black, Color.Green), 2.0F)
+            .BorderPen = New Pen(New Drawing2D.LinearGradientBrush(New PointF(0, 0), New PointF(320, 240), Color.Black, Color.Green), 1.0F)
         }
 
-        BackgroundImage = SystemIcons.Asterisk.ToBitmap
-
+        ctlPanel.Controls.Add(New Label With {.Location = New Point(20, 20), .Text = "Test Label", .BackColor = Color.Transparent})
         Controls.Add(ctlPanel)
         ctlPanel.Show()
+
+        BackgroundImage = SystemIcons.Asterisk.ToBitmap
     End Sub
 End Class
