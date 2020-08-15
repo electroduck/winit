@@ -23,15 +23,15 @@
             .BackColor = Color.Transparent,
             .BorderPen = New Pen(New Drawing2D.LinearGradientBrush(New PointF(0, 0), New PointF(320, 240), Color.Black, Color.Red), 1.0F),
             .ShadowEnabled = True,
-            .ShadowSoftness = 4,
+            .ShadowSoftness = 8,
             .ShadowColor = Color.Black,
-            .ShadowOffset = New Padding(8.0F)
+            .ShadowOffset = New Padding(4, 4, 8, 8)
         }
 
         ctlPanel2.Controls.Add(New Label With {.Location = New Point(20, 20), .Text = "Test Label 2", .BackColor = Color.Transparent})
         Controls.Add(ctlPanel2)
         ctlPanel2.Show()
 
-        'BackgroundImage = SystemIcons.Asterisk.ToBitmap
+        BackgroundImage = SystemIcons.Asterisk.ToBitmap
     End Sub
 End Class

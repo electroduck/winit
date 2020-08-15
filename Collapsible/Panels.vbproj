@@ -103,5 +103,11 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PanelsInternal\PanelsInternal.csproj">
+      <Project>{3086d0a5-b811-4f40-9aba-34e003158251}</Project>
+      <Name>PanelsInternal</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

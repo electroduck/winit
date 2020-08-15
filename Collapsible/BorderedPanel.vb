@@ -78,7 +78,7 @@ Public Class BorderedPanel
                             Sub(gfxShadow As Graphics)
                                 FillRoundedRectangle(gfxShadow, New SolidBrush(ShadowColor),
                                                      New Rectangle(0, 0, rectShadow.Width, rectShadow.Height), CornerRadius)
-                            End Sub)
+                            End Sub, True)
                     End If
 
                     FillRoundedRectangle(gfxBuf2, InnerBackground, rectInner, CornerRadius)
@@ -139,9 +139,24 @@ Public Class BorderedPanel
 
     Private Delegate Sub DrawShadowDelegate(gfxShadow As Graphics)
 
-    Private Shared Sub DrawSoftShadow(gfx As Graphics, rectShadow As Rectangle, nSoftness As Single, procDrawShadow As DrawShadowDelegate)
+    Private Shared Sub DrawSoftShadow(gfx As Graphics, rectShadow As Rectangle, nSoftness As Single, procDrawShadow As DrawShadowDelegate,
+                                      Optional bHighQuality As Boolean = False)
         If nSoftness = 0 Then
             procDrawShadow(gfx)
+        ElseIf bHighQuality Then
+            nSoftness /= 2
+            Using bmShadowBuf As New Bitmap(rectShadow.Width, rectShadow.Height)
+                Using gfxShadowBuf As Graphics = Graphics.FromImage(bmShadowBuf)
+                    gfxShadowBuf.ScaleTransform((rectShadow.Width - nSoftness * 2) / rectShadow.Width,
+                                                (rectShadow.Height - nSoftness * 2) / rectShadow.Height)
+                    gfxShadowBuf.TranslateTransform(nSoftness, nSoftness)
+                    procDrawShadow(gfxShadowBuf)
+                End Using
+
+                Using bmShadowSoft As Bitmap = Internal.ImageFX.BlurMethodB(bmShadowBuf, nSoftness)
+                    gfx.DrawImageUnscaled(bmShadowSoft, rectShadow.Left, rectShadow.Top)
+                End Using
+            End Using
         Else
             Using bmShadowBuf As New Bitmap(CInt(rectShadow.Width / nSoftness) + 1,
                                             CInt(rectShadow.Height / nSoftness) + 1)
