@@ -8,10 +8,11 @@
             .CornerRadius = 16,
             .BackColor = Color.Transparent,
             .BorderPen = New Pen(New Drawing2D.LinearGradientBrush(New PointF(0, 0), New PointF(320, 240), Color.Black, Color.Green), 1.0F),
-            .Text = "Panel 1"
+            .Text = "Panel 1",
+            .AnimationLength = 200
         }
 
-        'ctlPanel1.Controls.Add(New Label With {.Location = New Point(20, 20), .Text = "Test Label 1", .BackColor = Color.Transparent})
+        ctlPanel1.Controls.Add(New Label With {.Location = New Point(20, 100), .Text = "Test Label 1", .BackColor = Color.Transparent})
         Controls.Add(ctlPanel1)
         ctlPanel1.Show()
 
