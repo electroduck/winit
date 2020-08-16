@@ -91,7 +91,9 @@ Public Class BorderedPanel
             End If
         End Get
         Set(value As Image)
-            mInnerBackground = New TextureBrush(value)
+            If value IsNot Nothing Then
+                mInnerBackground = New TextureBrush(value)
+            End If
         End Set
     End Property
 
@@ -283,7 +285,9 @@ Public Class BorderedPanel
     Private Shared Sub DrawSoftShadow(gfx As Graphics, rectShadow As Rectangle, nSoftness As Single, procDrawShadow As DrawShadowDelegate,
                                       Optional bHighQuality As Boolean = False)
         If nSoftness = 0 Then
+            gfx.TranslateTransform(rectShadow.Left, rectShadow.Top)
             procDrawShadow(gfx)
+            gfx.TranslateTransform(-rectShadow.Left, -rectShadow.Top)
         ElseIf bHighQuality Then
             nSoftness /= 2
             Using bmShadowBuf As New Bitmap(rectShadow.Width, rectShadow.Height)

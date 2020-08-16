@@ -48,6 +48,15 @@ Public Class CollapsePanel
         End Set
     End Property
 
+    Public Property HeaderText As String
+        Get
+            Return mHeader.Text
+        End Get
+        Set(strValue As String)
+            mHeader.Text = strValue
+        End Set
+    End Property
+
     Public Property AnimationLength As Integer = 0
 
     Private mHeaderFont As Font = SystemFonts.DefaultFont
