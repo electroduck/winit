@@ -31,6 +31,7 @@ Public Class BorderedPanel
         End Get
         Set(value As Short)
             mBorderPen.Width = value
+            OnBorderChanged()
         End Set
     End Property
 
@@ -44,6 +45,7 @@ Public Class BorderedPanel
         End Get
         Set(value As Color)
             mBorderPen = New Pen(New SolidBrush(value), mBorderPen.Width)
+            OnBorderChanged()
         End Set
     End Property
 
@@ -79,6 +81,7 @@ Public Class BorderedPanel
         End Get
         Set(value As Color)
             mInnerBackground = New SolidBrush(value)
+            OnBorderChanged()
         End Set
     End Property
 
@@ -93,6 +96,7 @@ Public Class BorderedPanel
         Set(value As Image)
             If value IsNot Nothing Then
                 mInnerBackground = New TextureBrush(value)
+                OnBorderChanged()
             End If
         End Set
     End Property
