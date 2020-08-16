@@ -25,6 +25,28 @@ Public Class BorderedPanel
         End Set
     End Property
 
+    Public Property BorderThickness As Short
+        Get
+            Return mBorderPen.Width
+        End Get
+        Set(value As Short)
+            mBorderPen.Width = value
+        End Set
+    End Property
+
+    Public Property BorderColor As Color
+        Get
+            If mBorderPen.Brush.GetType Is GetType(SolidBrush) Then
+                Return DirectCast(mBorderPen.Brush, SolidBrush).Color
+            Else
+                Return Color.Transparent
+            End If
+        End Get
+        Set(value As Color)
+            mBorderPen = New Pen(New SolidBrush(value), mBorderPen.Width)
+        End Set
+    End Property
+
     Private mCornerRadius As Integer
     Public Property CornerRadius As Integer Implements IBordered.CornerRadius
         Get
@@ -44,6 +66,32 @@ Public Class BorderedPanel
         Set(value As Brush)
             mInnerBackground = value
             OnBorderChanged()
+        End Set
+    End Property
+
+    Public Property InnerBackgroundColor As Color
+        Get
+            If mInnerBackground.GetType Is GetType(SolidBrush) Then
+                Return DirectCast(mInnerBackground, SolidBrush).Color
+            Else
+                Return Color.Transparent
+            End If
+        End Get
+        Set(value As Color)
+            mInnerBackground = New SolidBrush(value)
+        End Set
+    End Property
+
+    Public Property InnerBackgroundTexture As Image
+        Get
+            If mInnerBackground.GetType Is GetType(TextureBrush) Then
+                Return DirectCast(mInnerBackground, TextureBrush).Image
+            Else
+                Return Nothing
+            End If
+        End Get
+        Set(value As Image)
+            mInnerBackground = New TextureBrush(value)
         End Set
     End Property
 
@@ -267,9 +315,7 @@ Public Class BorderedPanel
     End Sub
 
     Protected Overrides Sub OnPaintBackground(args As PaintEventArgs)
-        Using gfxScreen As Graphics = args.Graphics
-            gfxScreen.DrawImageUnscaled(mBackBuf1, 0, 0)
-        End Using
+        args.Graphics.DrawImageUnscaled(mBackBuf1, 0, 0)
     End Sub
 
     Protected Overrides Sub OnClientSizeChanged(e As EventArgs)

@@ -148,7 +148,7 @@ Public Class CollapsePanel
 
             Height = fAnimPercent * nHeightDiff + nOrigHeight
             Invalidate()
-            Application.DoEvents()
+            Application.DoEvents() ' TODO: Use timer instead
         End While
 
         Height = nTargetHeight
