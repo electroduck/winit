@@ -1,16 +1,17 @@
 ﻿Public Class Form1
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        Dim ctlPanel1 As New UI.Panels.BorderedPanel With {
+        Dim ctlPanel1 As New UI.Panels.CollapsePanel With {
             .Location = New Point(50, 100),
             .Size = New Size(320, 240),
             .BorderMargin = New Padding(4.0F),
             .InnerBackground = New Drawing2D.LinearGradientBrush(New PointF(0, 0), New PointF(320, 240), Color.AntiqueWhite, Color.Transparent),
             .CornerRadius = 16,
             .BackColor = Color.Transparent,
-            .BorderPen = New Pen(New Drawing2D.LinearGradientBrush(New PointF(0, 0), New PointF(320, 240), Color.Black, Color.Green), 1.0F)
+            .BorderPen = New Pen(New Drawing2D.LinearGradientBrush(New PointF(0, 0), New PointF(320, 240), Color.Black, Color.Green), 1.0F),
+            .Text = "Panel 1"
         }
 
-        ctlPanel1.Controls.Add(New Label With {.Location = New Point(20, 20), .Text = "Test Label 1", .BackColor = Color.Transparent})
+        'ctlPanel1.Controls.Add(New Label With {.Location = New Point(20, 20), .Text = "Test Label 1", .BackColor = Color.Transparent})
         Controls.Add(ctlPanel1)
         ctlPanel1.Show()
 

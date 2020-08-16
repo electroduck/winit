@@ -11,29 +11,122 @@ Public Class BorderedPanel
 
     Private mBackBuf1 As New Bitmap(1, 1)
 
+    Public Event BorderChanged(ctl As BorderedPanel)
+
+#Region "Properties"
+    Private mBorderPen As Pen
+    Public Property BorderPen As Pen Implements IBordered.BorderPen
+        Get
+            Return mBorderPen
+        End Get
+        Set(value As Pen)
+            mBorderPen = value
+            OnBorderChanged()
+        End Set
+    End Property
+
+    Private mCornerRadius As Integer
+    Public Property CornerRadius As Integer Implements IBordered.CornerRadius
+        Get
+            Return mCornerRadius
+        End Get
+        Set(value As Integer)
+            mCornerRadius = value
+            OnBorderChanged()
+        End Set
+    End Property
+
+    Private mInnerBackground As Brush
+    Public Property InnerBackground As Brush Implements IBordered.InnerBackground
+        Get
+            Return mInnerBackground
+        End Get
+        Set(value As Brush)
+            mInnerBackground = value
+            OnBorderChanged()
+        End Set
+    End Property
+
+    Private mBorderMargin As Padding
+    Public Property BorderMargin As Padding Implements IBordered.BorderMargin
+        Get
+            Return mBorderMargin
+        End Get
+        Set(value As Padding)
+            mBorderMargin = value
+            OnBorderChanged()
+        End Set
+    End Property
+
+    Private mBorderPadding As Padding
+    Public Property BorderPadding As Padding Implements IBordered.BorderPadding
+        Get
+            Return mBorderPadding
+        End Get
+        Set(value As Padding)
+            mBorderPadding = value
+            OnBorderChanged()
+        End Set
+    End Property
+
+    Private mShadowEnabled As Boolean
+    Public Property ShadowEnabled As Boolean Implements IBordered.ShadowEnabled
+        Get
+            Return mShadowEnabled
+        End Get
+        Set(value As Boolean)
+            mShadowEnabled = value
+            OnBorderChanged()
+        End Set
+    End Property
+
+    Private mShadowOffset As Padding
+    Public Property ShadowOffset As Padding Implements IBordered.ShadowOffset
+        Get
+            Return mShadowOffset
+        End Get
+        Set(value As Padding)
+            mShadowOffset = value
+            OnBorderChanged()
+        End Set
+    End Property
+
+    Private mShadowColor As Color
+    Public Property ShadowColor As Color Implements IBordered.ShadowColor
+        Get
+            Return mShadowColor
+        End Get
+        Set(value As Color)
+            mShadowColor = value
+            OnBorderChanged()
+        End Set
+    End Property
+
+    Private mShadowSoftness As Single
+    Public Property ShadowSoftness As Single Implements IBordered.ShadowSoftness
+        Get
+            Return mShadowSoftness
+        End Get
+        Set(value As Single)
+            mShadowSoftness = value
+            OnBorderChanged()
+        End Set
+    End Property
+#End Region
+
     Public Sub New()
         MyBase.New()
 
-        BorderPen = SystemPens.ActiveBorder
-        CornerRadius = 0.0F
-        InnerBackground = SystemBrushes.Window
-        BorderMargin = New Padding(2.0F)
-        BorderPadding = New Padding(2.0F)
-        ShadowEnabled = False
-        ShadowOffset = New Padding(4)
-        ShadowColor = Color.FromArgb(192, Color.Black)
-        ShadowSoftness = 0
+        mBorderPen = SystemPens.ActiveBorder
+        mCornerRadius = 0.0F
+        mInnerBackground = SystemBrushes.Window
+        mBorderMargin = New Padding(2.0F)
+        mBorderPadding = New Padding(2.0F)
+        mShadowEnabled = False
+        mShadowOffset = New Padding(4)
+        mShadowColor = Color.FromArgb(192, Color.Black)
+        mShadowSoftness = 0
     End Sub
-
-    Public Property BorderPen As Pen Implements IBordered.BorderPen
-    Public Property CornerRadius As Integer Implements IBordered.CornerRadius
-    Public Property InnerBackground As Brush Implements IBordered.InnerBackground
-    Public Property BorderMargin As Padding Implements IBordered.BorderMargin
-    Public Property BorderPadding As Padding Implements IBordered.BorderPadding
-    Public Property ShadowEnabled As Boolean Implements IBordered.ShadowEnabled
-    Public Property ShadowOffset As Padding Implements IBordered.ShadowOffset
-    Public Property ShadowColor As Color Implements IBordered.ShadowColor
-    Public Property ShadowSoftness As Single Implements IBordered.ShadowSoftness
 
     Public Sub RefreshBackground()
         If Size <> mBackBuf1.Size Then
@@ -218,5 +311,10 @@ Public Class BorderedPanel
     Protected Overrides Sub OnLocationChanged(e As EventArgs)
         MyBase.OnLocationChanged(e)
         RefreshBackground()
+    End Sub
+
+    Protected Overridable Sub OnBorderChanged()
+        RefreshBackground()
+        RaiseEvent BorderChanged(Me)
     End Sub
 End Class

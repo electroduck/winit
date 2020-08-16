@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Electroduck.UI.Panels.Internal</RootNamespace>
-    <AssemblyName>PanelsInternal</AssemblyName>
+    <AssemblyName>UIPanelsInternal</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>

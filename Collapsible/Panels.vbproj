@@ -67,6 +67,12 @@
     <Compile Include="BorderedPanel.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="CollapsePanel.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="CollapsePanelHeader.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="IBordered.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
