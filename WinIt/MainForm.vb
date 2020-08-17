@@ -6,6 +6,7 @@ Public Class MainForm
 
     Private Sub MainForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         AdjustPanelWidths()
+        BuildHDDList()
     End Sub
 
     Private Sub AdjustPanelWidths()
@@ -63,22 +64,23 @@ Public Class MainForm
                                           {.Text = dl.DownloadName, .Tag = dl})
         Next
 
+        pageChoices.StandardButtons.Add(TaskDialogResult.Cancel)
+
         Dim dlgChoices As New TaskDialog(pageChoices)
         Dim btnResult As TaskDialogButton = dlgChoices.Show()
 
         If btnResult.GetType Is GetType(TaskDialogCustomButton) Then
+            Dim dl As ISODownloadHelper = btnResult.Tag
             Enabled = False
             Try
-                Dim dl As ISODownloadHelper = btnResult.Tag
-                Dim strTempFile As String = IO.Path.Combine(TempFolder, dl.DownloadFileName & ".iso")
-                Try
-                    dl.Download(strTempFile, Me)
-                    mSourcePath = strTempFile
-                Catch exCancelled As DownloadCancelledException
-                    MessageBox.Show(Me, "Download of " & dl.DownloadName & " cancelled.")
-                Catch ex As Exception
-                    ShowErrorMessage("Error downloading file", ex)
-                End Try
+                Throw New Exception("Test exception")
+                Dim strTempFile As String = IO.Path.Combine(TempFolder, dl.DownloadFileName)
+                dl.Download(strTempFile, Me)
+                mSourcePath = strTempFile
+            Catch exCancelled As DownloadCancelledException
+                MessageBox.Show(Me, "Download of " & dl.DownloadName & " cancelled.")
+            Catch ex As Exception
+                ShowErrorMessage("Error downloading file", ex)
             Finally
                 Enabled = True
             End Try
@@ -91,7 +93,8 @@ Public Class MainForm
             .CanBeMinimized = False,
             .Expander = New TaskDialogExpander With {
                 .CollapsedButtonText = "Details",
-                .Text = ex.ToString
+                .Text = ex.ToString,
+                .ExpandFooterArea = True
             },
             .Icon = SystemIcons.Error,
             .Text = ex.Message,
@@ -107,5 +110,21 @@ Public Class MainForm
 
     Private Sub MainForm_Closing(objSender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
         CleanTempFiles()
+    End Sub
+
+    Private Sub BuildHDDList()
+        TargetIconList.Images.Clear()
+        TargetIconList.Images.Add(GetIcon("shell32.dll", 79, True))
+
+        TargetListView.Clear()
+        Dim arrDisks() As Harddisk = Harddisk.GetDiskList
+        For Each disk As Harddisk In arrDisks
+            Dim itmDisk As New ListViewItem With {
+                .Text = String.Format("{0} ({1})", disk.ProductID, disk.Size),
+                .ImageIndex = 0
+            }
+
+            TargetListView.Items.Add(itmDisk)
+        Next
     End Sub
 End Class

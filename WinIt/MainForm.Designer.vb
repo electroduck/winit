@@ -34,13 +34,19 @@ Partial Class MainForm
         Me.HelpToolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.OpenISODlg = New System.Windows.Forms.OpenFileDialog()
         Me.OpenInstDiskDlg = New System.Windows.Forms.FolderBrowserDialog()
+        Me.TargetDiskPnl = New Electroduck.UI.Panels.CollapsePanel()
+        Me.TargetInstrLbl = New System.Windows.Forms.Label()
+        Me.TargetListView = New System.Windows.Forms.ListView()
+        Me.TargetIconList = New System.Windows.Forms.ImageList(Me.components)
         Me.MainFlowPnl.SuspendLayout()
         Me.InputFilePnl.SuspendLayout()
+        Me.TargetDiskPnl.SuspendLayout()
         Me.SuspendLayout()
         '
         'MainFlowPnl
         '
         Me.MainFlowPnl.Controls.Add(Me.InputFilePnl)
+        Me.MainFlowPnl.Controls.Add(Me.TargetDiskPnl)
         Me.MainFlowPnl.Dock = System.Windows.Forms.DockStyle.Fill
         Me.MainFlowPnl.Location = New System.Drawing.Point(0, 0)
         Me.MainFlowPnl.Name = "MainFlowPnl"
@@ -68,6 +74,7 @@ Partial Class MainForm
         Me.InputFilePnl.InnerBackgroundColor = System.Drawing.SystemColors.Window
         Me.InputFilePnl.InnerBackgroundTexture = Nothing
         Me.InputFilePnl.Location = New System.Drawing.Point(3, 3)
+        Me.InputFilePnl.Margin = New System.Windows.Forms.Padding(3, 3, 3, 0)
         Me.InputFilePnl.Name = "InputFilePnl"
         Me.InputFilePnl.Padding = New System.Windows.Forms.Padding(22, 40, 20, 20)
         Me.InputFilePnl.ShadowColor = System.Drawing.Color.FromArgb(CType(CType(192, Byte), Integer), CType(CType(0, Byte), Integer), CType(CType(0, Byte), Integer), CType(CType(0, Byte), Integer))
@@ -146,6 +153,68 @@ Partial Class MainForm
         Me.OpenInstDiskDlg.Description = "Choose an install disk or folder containing the contents of one."
         Me.OpenInstDiskDlg.RootFolder = System.Environment.SpecialFolder.MyComputer
         '
+        'TargetDiskPnl
+        '
+        Me.TargetDiskPnl.AnimationLength = 0
+        Me.TargetDiskPnl.BorderColor = System.Drawing.Color.FromArgb(CType(CType(160, Byte), Integer), CType(CType(160, Byte), Integer), CType(CType(160, Byte), Integer))
+        Me.TargetDiskPnl.BorderMargin = New System.Windows.Forms.Padding(8)
+        Me.TargetDiskPnl.BorderPadding = New System.Windows.Forms.Padding(2)
+        Me.TargetDiskPnl.BorderThickness = CType(1, Short)
+        Me.TargetDiskPnl.CanCollapse = True
+        Me.TargetDiskPnl.Controls.Add(Me.TargetListView)
+        Me.TargetDiskPnl.Controls.Add(Me.TargetInstrLbl)
+        Me.TargetDiskPnl.CornerRadius = 6
+        Me.TargetDiskPnl.Expanded = True
+        Me.TargetDiskPnl.HeaderFont = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.TargetDiskPnl.HeaderHeight = 32
+        Me.TargetDiskPnl.HeaderText = "2: Target Disk"
+        Me.TargetDiskPnl.InnerBackgroundColor = System.Drawing.SystemColors.Window
+        Me.TargetDiskPnl.InnerBackgroundTexture = Nothing
+        Me.TargetDiskPnl.Location = New System.Drawing.Point(3, 147)
+        Me.TargetDiskPnl.Margin = New System.Windows.Forms.Padding(3, 0, 3, 0)
+        Me.TargetDiskPnl.Name = "TargetDiskPnl"
+        Me.TargetDiskPnl.Padding = New System.Windows.Forms.Padding(22, 40, 20, 20)
+        Me.TargetDiskPnl.ShadowColor = System.Drawing.Color.FromArgb(CType(CType(192, Byte), Integer), CType(CType(0, Byte), Integer), CType(CType(0, Byte), Integer), CType(CType(0, Byte), Integer))
+        Me.TargetDiskPnl.ShadowEnabled = True
+        Me.TargetDiskPnl.ShadowOffset = New System.Windows.Forms.Padding(-3, 4, 3, 7)
+        Me.TargetDiskPnl.ShadowSoftness = 8.0!
+        Me.TargetDiskPnl.Size = New System.Drawing.Size(569, 144)
+        Me.TargetDiskPnl.TabIndex = 1
+        Me.TargetDiskPnl.Text = "2: Target Disk"
+        '
+        'TargetInstrLbl
+        '
+        Me.TargetInstrLbl.AutoSize = True
+        Me.TargetInstrLbl.BackColor = System.Drawing.SystemColors.Window
+        Me.TargetInstrLbl.Location = New System.Drawing.Point(25, 40)
+        Me.TargetInstrLbl.Margin = New System.Windows.Forms.Padding(3, 0, 3, 8)
+        Me.TargetInstrLbl.Name = "TargetInstrLbl"
+        Me.TargetInstrLbl.Size = New System.Drawing.Size(418, 17)
+        Me.TargetInstrLbl.TabIndex = 1
+        Me.TargetInstrLbl.Text = "Choose the disk to install Windows on. All existing files will be deleted."
+        '
+        'TargetListView
+        '
+        Me.TargetListView.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.TargetListView.BorderStyle = System.Windows.Forms.BorderStyle.None
+        Me.TargetListView.FullRowSelect = True
+        Me.TargetListView.HideSelection = False
+        Me.TargetListView.Location = New System.Drawing.Point(28, 68)
+        Me.TargetListView.Name = "TargetListView"
+        Me.TargetListView.Size = New System.Drawing.Size(518, 53)
+        Me.TargetListView.SmallImageList = Me.TargetIconList
+        Me.TargetListView.TabIndex = 2
+        Me.TargetListView.UseCompatibleStateImageBehavior = False
+        Me.TargetListView.View = System.Windows.Forms.View.SmallIcon
+        '
+        'TargetIconList
+        '
+        Me.TargetIconList.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit
+        Me.TargetIconList.ImageSize = New System.Drawing.Size(16, 16)
+        Me.TargetIconList.TransparentColor = System.Drawing.Color.Transparent
+        '
         'MainForm
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 17.0!)
@@ -160,6 +229,8 @@ Partial Class MainForm
         Me.MainFlowPnl.ResumeLayout(False)
         Me.InputFilePnl.ResumeLayout(False)
         Me.InputFilePnl.PerformLayout()
+        Me.TargetDiskPnl.ResumeLayout(False)
+        Me.TargetDiskPnl.PerformLayout()
         Me.ResumeLayout(False)
 
     End Sub
@@ -175,4 +246,8 @@ Partial Class MainForm
     Friend WithEvents HelpToolTip As ToolTip
     Friend WithEvents OpenISODlg As OpenFileDialog
     Friend WithEvents OpenInstDiskDlg As FolderBrowserDialog
+    Friend WithEvents TargetDiskPnl As UI.Panels.CollapsePanel
+    Friend WithEvents TargetInstrLbl As Label
+    Friend WithEvents TargetListView As ListView
+    Friend WithEvents TargetIconList As ImageList
 End Class

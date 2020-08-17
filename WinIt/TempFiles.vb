@@ -21,6 +21,7 @@
 
     Public ReadOnly Property TempFolder As String
         Get
+            InitTempFolder()
             Return mTempFolder
         End Get
     End Property
