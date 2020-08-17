@@ -30,23 +30,30 @@ Partial Class MainForm
         Me.ChooseDiskBtn = New System.Windows.Forms.Button()
         Me.ChooseISOBtn = New System.Windows.Forms.Button()
         Me.DiskInstrLbl = New System.Windows.Forms.Label()
+        Me.TargetDiskPnl = New Electroduck.UI.Panels.CollapsePanel()
+        Me.TargetListView = New System.Windows.Forms.ListView()
+        Me.TargetIconList = New System.Windows.Forms.ImageList(Me.components)
+        Me.TargetInstrLbl = New System.Windows.Forms.Label()
+        Me.ProgressPnl = New Electroduck.UI.Panels.CollapsePanel()
+        Me.InstallBtn = New System.Windows.Forms.Button()
+        Me.InstallPbar = New System.Windows.Forms.ProgressBar()
+        Me.ProgressText1Lbl = New System.Windows.Forms.Label()
         Me.ResizeDebounceTmr = New System.Windows.Forms.Timer(Me.components)
         Me.HelpToolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.OpenISODlg = New System.Windows.Forms.OpenFileDialog()
         Me.OpenInstDiskDlg = New System.Windows.Forms.FolderBrowserDialog()
-        Me.TargetDiskPnl = New Electroduck.UI.Panels.CollapsePanel()
-        Me.TargetInstrLbl = New System.Windows.Forms.Label()
-        Me.TargetListView = New System.Windows.Forms.ListView()
-        Me.TargetIconList = New System.Windows.Forms.ImageList(Me.components)
+        Me.InstallWorker = New System.ComponentModel.BackgroundWorker()
         Me.MainFlowPnl.SuspendLayout()
         Me.InputFilePnl.SuspendLayout()
         Me.TargetDiskPnl.SuspendLayout()
+        Me.ProgressPnl.SuspendLayout()
         Me.SuspendLayout()
         '
         'MainFlowPnl
         '
         Me.MainFlowPnl.Controls.Add(Me.InputFilePnl)
         Me.MainFlowPnl.Controls.Add(Me.TargetDiskPnl)
+        Me.MainFlowPnl.Controls.Add(Me.ProgressPnl)
         Me.MainFlowPnl.Dock = System.Windows.Forms.DockStyle.Fill
         Me.MainFlowPnl.Location = New System.Drawing.Point(0, 0)
         Me.MainFlowPnl.Name = "MainFlowPnl"
@@ -140,19 +147,6 @@ Partial Class MainForm
         Me.DiskInstrLbl.Text = "Choose an install disk or disk image (ISO file) for your desired version of Windo" &
     "ws."
         '
-        'ResizeDebounceTmr
-        '
-        '
-        'OpenISODlg
-        '
-        Me.OpenISODlg.Filter = "ISO files|*.iso"
-        Me.OpenISODlg.Title = "Choose ISO File"
-        '
-        'OpenInstDiskDlg
-        '
-        Me.OpenInstDiskDlg.Description = "Choose an install disk or folder containing the contents of one."
-        Me.OpenInstDiskDlg.RootFolder = System.Environment.SpecialFolder.MyComputer
-        '
         'TargetDiskPnl
         '
         Me.TargetDiskPnl.AnimationLength = 0
@@ -182,17 +176,6 @@ Partial Class MainForm
         Me.TargetDiskPnl.TabIndex = 1
         Me.TargetDiskPnl.Text = "2: Target Disk"
         '
-        'TargetInstrLbl
-        '
-        Me.TargetInstrLbl.AutoSize = True
-        Me.TargetInstrLbl.BackColor = System.Drawing.SystemColors.Window
-        Me.TargetInstrLbl.Location = New System.Drawing.Point(25, 40)
-        Me.TargetInstrLbl.Margin = New System.Windows.Forms.Padding(3, 0, 3, 8)
-        Me.TargetInstrLbl.Name = "TargetInstrLbl"
-        Me.TargetInstrLbl.Size = New System.Drawing.Size(418, 17)
-        Me.TargetInstrLbl.TabIndex = 1
-        Me.TargetInstrLbl.Text = "Choose the disk to install Windows on. All existing files will be deleted."
-        '
         'TargetListView
         '
         Me.TargetListView.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
@@ -203,6 +186,7 @@ Partial Class MainForm
         Me.TargetListView.HideSelection = False
         Me.TargetListView.Location = New System.Drawing.Point(28, 68)
         Me.TargetListView.Name = "TargetListView"
+        Me.TargetListView.OwnerDraw = True
         Me.TargetListView.Size = New System.Drawing.Size(518, 53)
         Me.TargetListView.SmallImageList = Me.TargetIconList
         Me.TargetListView.TabIndex = 2
@@ -214,6 +198,94 @@ Partial Class MainForm
         Me.TargetIconList.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit
         Me.TargetIconList.ImageSize = New System.Drawing.Size(16, 16)
         Me.TargetIconList.TransparentColor = System.Drawing.Color.Transparent
+        '
+        'TargetInstrLbl
+        '
+        Me.TargetInstrLbl.AutoSize = True
+        Me.TargetInstrLbl.BackColor = System.Drawing.SystemColors.Window
+        Me.TargetInstrLbl.Location = New System.Drawing.Point(25, 40)
+        Me.TargetInstrLbl.Margin = New System.Windows.Forms.Padding(3, 0, 3, 8)
+        Me.TargetInstrLbl.Name = "TargetInstrLbl"
+        Me.TargetInstrLbl.Size = New System.Drawing.Size(418, 17)
+        Me.TargetInstrLbl.TabIndex = 1
+        Me.TargetInstrLbl.Text = "Choose the disk to install Windows on. All existing files will be deleted."
+        '
+        'ProgressPnl
+        '
+        Me.ProgressPnl.AnimationLength = 0
+        Me.ProgressPnl.BorderColor = System.Drawing.Color.FromArgb(CType(CType(160, Byte), Integer), CType(CType(160, Byte), Integer), CType(CType(160, Byte), Integer))
+        Me.ProgressPnl.BorderMargin = New System.Windows.Forms.Padding(8)
+        Me.ProgressPnl.BorderPadding = New System.Windows.Forms.Padding(2)
+        Me.ProgressPnl.BorderThickness = CType(1, Short)
+        Me.ProgressPnl.CanCollapse = True
+        Me.ProgressPnl.Controls.Add(Me.InstallBtn)
+        Me.ProgressPnl.Controls.Add(Me.InstallPbar)
+        Me.ProgressPnl.Controls.Add(Me.ProgressText1Lbl)
+        Me.ProgressPnl.CornerRadius = 6
+        Me.ProgressPnl.Expanded = True
+        Me.ProgressPnl.HeaderFont = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.ProgressPnl.HeaderHeight = 32
+        Me.ProgressPnl.HeaderText = "3: Install"
+        Me.ProgressPnl.InnerBackgroundColor = System.Drawing.SystemColors.Window
+        Me.ProgressPnl.InnerBackgroundTexture = Nothing
+        Me.ProgressPnl.Location = New System.Drawing.Point(3, 291)
+        Me.ProgressPnl.Margin = New System.Windows.Forms.Padding(3, 0, 3, 0)
+        Me.ProgressPnl.Name = "ProgressPnl"
+        Me.ProgressPnl.Padding = New System.Windows.Forms.Padding(22, 40, 20, 20)
+        Me.ProgressPnl.ShadowColor = System.Drawing.Color.FromArgb(CType(CType(192, Byte), Integer), CType(CType(0, Byte), Integer), CType(CType(0, Byte), Integer), CType(CType(0, Byte), Integer))
+        Me.ProgressPnl.ShadowEnabled = True
+        Me.ProgressPnl.ShadowOffset = New System.Windows.Forms.Padding(-3, 4, 3, 7)
+        Me.ProgressPnl.ShadowSoftness = 8.0!
+        Me.ProgressPnl.Size = New System.Drawing.Size(569, 122)
+        Me.ProgressPnl.TabIndex = 2
+        Me.ProgressPnl.Text = "3: Install"
+        '
+        'InstallBtn
+        '
+        Me.InstallBtn.Enabled = False
+        Me.InstallBtn.Location = New System.Drawing.Point(23, 68)
+        Me.InstallBtn.Margin = New System.Windows.Forms.Padding(0, 0, 8, 0)
+        Me.InstallBtn.Name = "InstallBtn"
+        Me.InstallBtn.Size = New System.Drawing.Size(100, 27)
+        Me.InstallBtn.TabIndex = 6
+        Me.InstallBtn.Text = "Install"
+        Me.InstallBtn.UseVisualStyleBackColor = True
+        '
+        'InstallPbar
+        '
+        Me.InstallPbar.Location = New System.Drawing.Point(134, 68)
+        Me.InstallPbar.Name = "InstallPbar"
+        Me.InstallPbar.Size = New System.Drawing.Size(412, 27)
+        Me.InstallPbar.TabIndex = 2
+        '
+        'ProgressText1Lbl
+        '
+        Me.ProgressText1Lbl.AutoSize = True
+        Me.ProgressText1Lbl.BackColor = System.Drawing.SystemColors.Window
+        Me.ProgressText1Lbl.Location = New System.Drawing.Point(25, 40)
+        Me.ProgressText1Lbl.Margin = New System.Windows.Forms.Padding(3, 0, 3, 8)
+        Me.ProgressText1Lbl.Name = "ProgressText1Lbl"
+        Me.ProgressText1Lbl.Size = New System.Drawing.Size(376, 17)
+        Me.ProgressText1Lbl.TabIndex = 1
+        Me.ProgressText1Lbl.Text = "Press Install to begin installing Windows onto the selected disk."
+        '
+        'ResizeDebounceTmr
+        '
+        '
+        'OpenISODlg
+        '
+        Me.OpenISODlg.Filter = "ISO files|*.iso"
+        Me.OpenISODlg.Title = "Choose ISO File"
+        '
+        'OpenInstDiskDlg
+        '
+        Me.OpenInstDiskDlg.Description = "Choose an install disk or folder containing the contents of one."
+        Me.OpenInstDiskDlg.RootFolder = System.Environment.SpecialFolder.MyComputer
+        '
+        'InstallWorker
+        '
+        Me.InstallWorker.WorkerReportsProgress = True
+        Me.InstallWorker.WorkerSupportsCancellation = True
         '
         'MainForm
         '
@@ -231,6 +303,8 @@ Partial Class MainForm
         Me.InputFilePnl.PerformLayout()
         Me.TargetDiskPnl.ResumeLayout(False)
         Me.TargetDiskPnl.PerformLayout()
+        Me.ProgressPnl.ResumeLayout(False)
+        Me.ProgressPnl.PerformLayout()
         Me.ResumeLayout(False)
 
     End Sub
@@ -250,4 +324,9 @@ Partial Class MainForm
     Friend WithEvents TargetInstrLbl As Label
     Friend WithEvents TargetListView As ListView
     Friend WithEvents TargetIconList As ImageList
+    Friend WithEvents ProgressPnl As UI.Panels.CollapsePanel
+    Friend WithEvents ProgressText1Lbl As Label
+    Friend WithEvents InstallWorker As System.ComponentModel.BackgroundWorker
+    Friend WithEvents InstallBtn As Button
+    Friend WithEvents InstallPbar As ProgressBar
 End Class

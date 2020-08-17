@@ -3,8 +3,13 @@
 Public Class MainForm
     Private mISOMode As Boolean = False
     Private mSourcePath As String = ""
+    Private mTargetDisk As Harddisk
+    Private mSelDiskBrush As Brush
+    Private mDiskIcon As Icon
 
     Private Sub MainForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        mSelDiskBrush = New SolidBrush(Color.FromArgb(128, SystemColors.Highlight))
+        mDiskIcon = GetIcon("shell32.dll", 79, True)
         AdjustPanelWidths()
         BuildHDDList()
     End Sub
@@ -35,6 +40,7 @@ Public Class MainForm
             mSourcePath = OpenISODlg.FileName
             ImageSelLbl.Text = "Selected ISO file: " & IO.Path.GetFileName(mSourcePath)
         End If
+        InstallBtn.Enabled = CanInstall()
     End Sub
 
     Private Sub ChooseDiskBtn_Click(sender As Object, e As EventArgs) Handles ChooseDiskBtn.Click
@@ -43,6 +49,7 @@ Public Class MainForm
             mSourcePath = OpenInstDiskDlg.SelectedPath
             ImageSelLbl.Text = "Selected install disk: " & mSourcePath
         End If
+        InstallBtn.Enabled = CanInstall()
     End Sub
 
     Private Shared ReadOnly arrDownloaders() As ISODownloadHelper = {
@@ -119,12 +126,38 @@ Public Class MainForm
         TargetListView.Clear()
         Dim arrDisks() As Harddisk = Harddisk.GetDiskList
         For Each disk As Harddisk In arrDisks
+            Debug.WriteLine(String.Format("Disk V={0} PID={1} PR={2} SN={3} MB={4:N0}", disk.VendorID, disk.ProductID,
+                disk.ProductRevision, disk.SerialNumber, disk.Size.Megabytes))
+
             Dim itmDisk As New ListViewItem With {
-                .Text = String.Format("{0} ({1})", disk.ProductID, disk.Size),
-                .ImageIndex = 0
+                .Text = String.Format("{0} ({1})", disk.Name, disk.Size),
+                .ImageIndex = 0,
+                .Tag = disk
             }
 
             TargetListView.Items.Add(itmDisk)
         Next
     End Sub
+
+    Private Sub TargetListView_SelectedIndexChanged(sender As Object, e As EventArgs) Handles TargetListView.SelectedIndexChanged
+        If TargetListView.SelectedIndices.Count = 0 Then
+            mTargetDisk = Nothing
+        Else
+            mTargetDisk = TargetListView.SelectedItems(0).Tag
+        End If
+        InstallBtn.Enabled = CanInstall()
+    End Sub
+
+    Private Sub TargetListView_DrawItem(sender As Object, e As DrawListViewItemEventArgs) Handles TargetListView.DrawItem
+        If mTargetDisk IsNot Nothing AndAlso e.Item.Tag Is mTargetDisk Then
+            e.Graphics.FillRectangle(mSelDiskBrush, e.Bounds)
+        End If
+
+        e.Graphics.DrawIcon(mDiskIcon, e.Bounds.X, e.Bounds.Y)
+        e.Graphics.DrawString(e.Item.Text, TargetListView.Font, SystemBrushes.ControlText, e.Bounds.X + 18, e.Bounds.Y + 2)
+    End Sub
+
+    Private Function CanInstall() As Boolean
+        Return mTargetDisk IsNot Nothing And mSourcePath.Length > 0
+    End Function
 End Class

@@ -138,6 +138,7 @@ Public Class Harddisk
         Public nRawPropertiesLength As UInteger
     End Class
 
+    Private mNumber As Integer
     Private mGeometry As DiskGeometry
     Private mInfoStringsRead As Boolean = False
     Private mVendor As String
@@ -148,7 +149,14 @@ Public Class Harddisk
     Public Sub New(nDisk As Integer)
         MyBase.New(String.Format("\\.\PhysicalDrive{0}", nDisk), AccessLevel.Read Or AccessLevel.Write,
                    ShareMode.Read Or ShareMode.Write, CreationDisposition.OpenExisting)
+        mNumber = nDisk
     End Sub
+
+    Public ReadOnly Property Number As Integer
+        Get
+            Return mNumber
+        End Get
+    End Property
 
     Public Shared Function GetDiskList() As Harddisk()
         Dim lstDisks As New List(Of Harddisk)
@@ -241,6 +249,22 @@ Public Class Harddisk
         Get
             CheckInfoStrings()
             Return mSerialNum
+        End Get
+    End Property
+
+    Public ReadOnly Property Name As String
+        Get
+            If ProductID.Length > 0 Then
+                Return ProductID.Trim
+            ElseIf ProductRevision.Length > 0 Then
+                Return If(VendorID.Length, VendorID.Trim & " ", "Generic rev.") & ProductRevision.Trim
+            ElseIf SerialNumber.Length > 0 Then
+                Return If(VendorID.Length, VendorID.Trim & " ", "Generic SN ") & SerialNumber.Trim
+            ElseIf VendorID.Length Then
+                Return VendorID.Trim & " brand disk"
+            Else
+                Return "Generic disk"
+            End If
         End Get
     End Property
 End Class
