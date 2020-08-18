@@ -31,7 +31,7 @@ Partial Class MainForm
         Me.ChooseISOBtn = New System.Windows.Forms.Button()
         Me.DiskInstrLbl = New System.Windows.Forms.Label()
         Me.TargetDiskPnl = New Electroduck.UI.Panels.CollapsePanel()
-        Me.TargetListView = New System.Windows.Forms.ListView()
+        Me.TargetListView = New Electroduck.WinIt.ListViewEx()
         Me.TargetIconList = New System.Windows.Forms.ImageList(Me.components)
         Me.TargetInstrLbl = New System.Windows.Forms.Label()
         Me.ProgressPnl = New Electroduck.UI.Panels.CollapsePanel()
@@ -43,6 +43,8 @@ Partial Class MainForm
         Me.OpenISODlg = New System.Windows.Forms.OpenFileDialog()
         Me.OpenInstDiskDlg = New System.Windows.Forms.FolderBrowserDialog()
         Me.InstallWorker = New System.ComponentModel.BackgroundWorker()
+        Me.BlockageToolTip = New System.Windows.Forms.ToolTip(Me.components)
+        Me.InstallHoverCheckTmr = New System.Windows.Forms.Timer(Me.components)
         Me.MainFlowPnl.SuspendLayout()
         Me.InputFilePnl.SuspendLayout()
         Me.TargetDiskPnl.SuspendLayout()
@@ -253,6 +255,8 @@ Partial Class MainForm
         '
         'InstallPbar
         '
+        Me.InstallPbar.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.InstallPbar.Location = New System.Drawing.Point(134, 68)
         Me.InstallPbar.Name = "InstallPbar"
         Me.InstallPbar.Size = New System.Drawing.Size(412, 27)
@@ -286,6 +290,15 @@ Partial Class MainForm
         '
         Me.InstallWorker.WorkerReportsProgress = True
         Me.InstallWorker.WorkerSupportsCancellation = True
+        '
+        'BlockageToolTip
+        '
+        Me.BlockageToolTip.IsBalloon = True
+        Me.BlockageToolTip.ShowAlways = True
+        '
+        'InstallHoverCheckTmr
+        '
+        Me.InstallHoverCheckTmr.Enabled = True
         '
         'MainForm
         '
@@ -322,11 +335,13 @@ Partial Class MainForm
     Friend WithEvents OpenInstDiskDlg As FolderBrowserDialog
     Friend WithEvents TargetDiskPnl As UI.Panels.CollapsePanel
     Friend WithEvents TargetInstrLbl As Label
-    Friend WithEvents TargetListView As ListView
+    Friend WithEvents TargetListView As ListViewEx
     Friend WithEvents TargetIconList As ImageList
     Friend WithEvents ProgressPnl As UI.Panels.CollapsePanel
     Friend WithEvents ProgressText1Lbl As Label
     Friend WithEvents InstallWorker As System.ComponentModel.BackgroundWorker
     Friend WithEvents InstallBtn As Button
     Friend WithEvents InstallPbar As ProgressBar
+    Friend WithEvents BlockageToolTip As ToolTip
+    Friend WithEvents InstallHoverCheckTmr As Timer
 End Class

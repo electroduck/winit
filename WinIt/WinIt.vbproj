@@ -50,6 +50,21 @@
     <ApplicationManifest>My Project\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DiscUtils.Core, Version=0.15.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\Quamotion.DiscUtils.Core.0.15.4\lib\net40\DiscUtils.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Iso9660, Version=0.15.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\Quamotion.DiscUtils.Iso9660.0.15.4\lib\net40\DiscUtils.Iso9660.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.OpticalDisk, Version=0.15.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\Quamotion.DiscUtils.OpticalDisk.0.15.4\lib\net40\DiscUtils.OpticalDisk.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Streams, Version=0.15.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\Quamotion.DiscUtils.Streams.0.15.4\lib\net40\DiscUtils.Streams.dll</HintPath>
+    </Reference>
+    <Reference Include="DiscUtils.Udf, Version=0.15.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
+      <HintPath>..\packages\Quamotion.DiscUtils.Udf.0.15.4\lib\net40\DiscUtils.Udf.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
@@ -78,6 +93,12 @@
     <Compile Include="FileLike.vb" />
     <Compile Include="Harddisk.vb" />
     <Compile Include="ISODownloadHelper.vb" />
+    <Compile Include="ListViewEx.Designer.vb">
+      <DependentUpon>ListViewEx.vb</DependentUpon>
+    </Compile>
+    <Compile Include="ListViewEx.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="MainForm.Designer.vb">
       <DependentUpon>MainForm.vb</DependentUpon>
     </Compile>
@@ -118,6 +139,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="My Project\app.manifest" />
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>
@@ -128,6 +150,7 @@
       <CustomToolNamespace>My</CustomToolNamespace>
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Collapsible\Panels.vbproj">
