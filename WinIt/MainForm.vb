@@ -353,6 +353,12 @@ Public Class MainForm
             InstallWorker.ReportProgress(-1, "Partitioning disk...")
             mTargetDisk.RepartitionMBR(arrParts)
 
+            ' Wait 10 seconds for the change to be detected
+            For n As Integer = 1 To 100
+                InstallWorker.ReportProgress(n, "Partitioning disk...")
+                Threading.Thread.Sleep(100)
+            Next
+
             If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
             InstallWorker.ReportProgress(-1, "Formatting boot partition...")
             Dim partBoot As Partition = mTargetDisk.Partition(1)
@@ -367,6 +373,21 @@ Public Class MainForm
             InstallWorker.ReportProgress(-1, "Formatting main partition...")
             Dim partWindows As Partition = mTargetDisk.Partition(3)
             partWindows.Format("NTFS", "Windows")
+
+            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            InstallWorker.ReportProgress(-1, "Mounting boot partition...")
+            Dim strBootMount As String = IO.Path.Combine(TempFolder, "Boot_" & Guid.NewGuid.ToString("n"))
+            partBoot.Mount(strBootMount)
+
+            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            InstallWorker.ReportProgress(-1, "Mounting recovery partition...")
+            Dim strRecoveryMount As String = IO.Path.Combine(TempFolder, "Recovery_" & Guid.NewGuid.ToString("n"))
+            partRecovery.Mount(strRecoveryMount)
+
+            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            InstallWorker.ReportProgress(-1, "Mounting main partition...")
+            Dim strWindowsMount As String = IO.Path.Combine(TempFolder, "Windows_" & Guid.NewGuid.ToString("n"))
+            partWindows.Mount(strWindowsMount)
         Catch ex As Exception
             e.Result = ex
         End Try

@@ -78,18 +78,11 @@ Public Class Partition
         End Set
     End Property
 
-    Public Sub MountSymlink(strMountPoint As String)
-        Dim attr As New ObjectAttributesHelper(strMountPoint)
-        Dim usTargetName As New UnicodeStringAlt With {
-            .nLength = strMountPoint.Length,
-            .nMaxLength = strMountPoint.Length,
-            .strBuffer = strMountPoint
-        }
-
-        Dim hSymlink As IntPtr
-        Dim nStatus As Integer = NtCreateSymbolicLinkObject(hSymlink, AccessLevel.All, attr.Attributes, usTargetName)
-        If nStatus And NTSTATUS_PROBLEM_BIT Then
-            Throw New ComponentModel.Win32Exception(RtlNtStatusToDosError(nStatus))
+    Public Sub Mount(strMountPoint As String)
+        If Not IO.Directory.Exists(strMountPoint) Then
+            IO.Directory.CreateDirectory(strMountPoint)
         End If
+
+        mVolume.InvokeMethod("AddMountPoint", New Object() {strMountPoint})
     End Sub
 End Class
