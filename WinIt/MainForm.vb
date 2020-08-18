@@ -1,4 +1,5 @@
 ﻿Imports KPreisser.UI
+Imports System.ComponentModel
 
 Public Class MainForm
     Private mISOMode As Boolean = False
@@ -8,6 +9,7 @@ Public Class MainForm
     Private mDiskIcon As Icon
     Private mBlockage As String
     Private mBlockageTipShowing As Boolean
+    Private mCancelDialog As TaskDialog
 
     Private Sub MainForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         mSelDiskBrush = New SolidBrush(Color.FromArgb(128, SystemColors.Highlight))
@@ -162,7 +164,7 @@ Public Class MainForm
         End If
 
         e.Graphics.DrawIcon(mDiskIcon, e.Bounds.X, e.Bounds.Y)
-        e.Graphics.DrawString(e.Item.Text, TargetListView.Font, If(InstallWorker.IsBusy, SystemBrushes.ControlText, SystemBrushes.GrayText),
+        e.Graphics.DrawString(e.Item.Text, TargetListView.Font, If(InstallWorker.IsBusy, SystemBrushes.GrayText, SystemBrushes.ControlText),
                               e.Bounds.X + 18, e.Bounds.Y + 2)
     End Sub
 
@@ -206,7 +208,7 @@ Public Class MainForm
 
     Private Sub InstallBtn_Click(sender As Object, e As EventArgs) Handles InstallBtn.Click
         If InstallWorker.IsBusy Then
-            ' TODO: Confirm cancel
+            ConfirmCancel()
         Else
             ConfirmInstall()
         End If
@@ -239,9 +241,138 @@ Public Class MainForm
         End If
     End Sub
 
+    Private Sub ConfirmCancel()
+        Dim page As New TaskDialogPage With {
+            .AllowCancel = True,
+            .CanBeMinimized = False,
+            .Icon = TaskDialogIcon.Get(TaskDialogStandardIcon.Warning),
+            .Instruction = "Stop installing?",
+            .Text = "If you choose to stop installing Windows on this disk, " &
+                "you will not be able to boot from it until the installation is restarted and completed. " &
+                vbNewLine & vbNewLine &
+                "Changes already made will not be undone. " &
+                "Any old files that used to be on the disk will most likely still be gone.",
+            .Title = "Confirm Installation"
+        }
+
+        Dim btnStop As New TaskDialogCustomButton With {
+            .Text = "Stop installation",
+            .DescriptionText = "Existing changes will not be undone"
+        }
+
+        Dim btnContinue As New TaskDialogCustomButton With {
+            .Text = "Continue",
+            .DescriptionText = "Finish installing Windows"
+        }
+
+        page.CustomButtons.Add(btnStop)
+        page.CustomButtons.Add(btnContinue)
+
+        mCancelDialog = New TaskDialog(page)
+        If mCancelDialog.Show(Me) Is btnStop Then
+            InstallWorker.CancelAsync()
+        End If
+        mCancelDialog = Nothing
+    End Sub
+
     Private Sub StartInstall()
         InputFilePnl.Enabled = False
         TargetDiskPnl.Enabled = False
+        InstallPbar.Style = ProgressBarStyle.Marquee
+        InstallBtn.Text = "Cancel"
+        ProgressText1Lbl.Text = "Starting installation..."
+
         InstallWorker.RunWorkerAsync()
+        TargetListView.Invalidate()
+    End Sub
+
+    Private Const ISO_PATH_WIM As String = "sources\install.wim"
+    Private Const ISO_EXTRACT_BLOCKSIZE As Long = 1024 * 512
+
+    Private Sub InstallWorker_DoWork(sender As Object, e As DoWorkEventArgs) Handles InstallWorker.DoWork
+        e.Result = Nothing
+        Try
+            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+
+            Dim strWIMPath As String
+            If mISOMode Then
+                Using stmISO As IO.Stream = IO.File.OpenRead(mSourcePath)
+                    Dim diskSource As New DiscUtils.Udf.UdfReader(stmISO)
+
+                    If Not diskSource.FileExists(ISO_PATH_WIM) Then
+                        Throw New FormatException("The given ISO file is not a Windows NT6+ install disk")
+                    End If
+
+                    Dim nWIMSize As Long = diskSource.GetFileLength(ISO_PATH_WIM)
+                    strWIMPath = IO.Path.Combine(TempFolder, Guid.NewGuid.ToString("N") & ".iso")
+
+                    Dim nExtractedBytes As Long = 0
+                    Dim nRead As Long = 0
+                    Dim arrData(ISO_EXTRACT_BLOCKSIZE - 1) As Byte
+                    Using stmWIMOnISO As DiscUtils.Streams.SparseStream = diskSource.OpenFile(ISO_PATH_WIM, IO.FileMode.Open)
+                        Using stmWIMFile As IO.Stream = IO.File.Create(strWIMPath)
+                            While nExtractedBytes < nWIMSize
+                                If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+
+                                nRead = stmWIMOnISO.Read(arrData, 0, ISO_EXTRACT_BLOCKSIZE)
+                                stmWIMFile.Write(arrData, 0, nRead)
+                                nExtractedBytes += nRead
+                                InstallWorker.ReportProgress((nExtractedBytes / nWIMSize) * 100.0,
+                                                             "Extracting Windows image...")
+                            End While
+                        End Using
+                    End Using
+                End Using
+            Else
+                strWIMPath = IO.Path.Combine(mSourcePath, ISO_PATH_WIM)
+                If Not IO.File.Exists(strWIMPath) Then
+                    Throw New FormatException("The given location does not contain a Windows NT6+ install disk")
+                End If
+            End If
+
+            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            InstallWorker.ReportProgress(-1, "Initializing disk...")
+
+            Do
+                If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+                Threading.Thread.Sleep(1000)
+            Loop
+
+        Catch ex As Exception
+            e.Result = ex
+        End Try
+    End Sub
+
+    Private Sub InstallWorker_Completed(sender As Object, e As RunWorkerCompletedEventArgs) Handles InstallWorker.RunWorkerCompleted
+        If mCancelDialog IsNot Nothing Then
+            mCancelDialog.Close()
+            mCancelDialog = Nothing
+        End If
+
+        If e.Result Is Nothing Then
+            MessageBox.Show(Me, "Installation succeeded.")
+        ElseIf e.Result.GetType = GetType(InstallCancelledException) Then
+            MessageBox.Show(Me, "Installation cancelled.")
+        Else
+            ShowErrorMessage("Error installing Windows", e.Result)
+        End If
+
+        InputFilePnl.Enabled = True
+        TargetDiskPnl.Enabled = True
+        InstallPbar.Style = ProgressBarStyle.Continuous
+        InstallPbar.Value = 0
+        InstallBtn.Text = "Install"
+        ProgressText1Lbl.Text = "Press Install to begin installing Windows onto the selected disk."
+        TargetListView.Invalidate()
+    End Sub
+
+    Private Sub InstallWorker_Progress(sender As Object, e As ProgressChangedEventArgs) Handles InstallWorker.ProgressChanged
+        If e.ProgressPercentage >= 0 Then
+            InstallPbar.Style = ProgressBarStyle.Continuous
+            InstallPbar.Value = e.ProgressPercentage
+        Else
+            InstallPbar.Style = ProgressBarStyle.Marquee
+        End If
+        ProgressText1Lbl.Text = e.UserState
     End Sub
 End Class

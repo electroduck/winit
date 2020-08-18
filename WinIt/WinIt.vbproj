@@ -92,6 +92,7 @@
     <Compile Include="DotNetUtil.vb" />
     <Compile Include="FileLike.vb" />
     <Compile Include="Harddisk.vb" />
+    <Compile Include="InstallCancelledException.vb" />
     <Compile Include="ISODownloadHelper.vb" />
     <Compile Include="ListViewEx.Designer.vb">
       <DependentUpon>ListViewEx.vb</DependentUpon>
