@@ -84,6 +84,22 @@
     End Operator
 
     Public Shared Narrowing Operator CType(dq As DataQuantity) As Integer
-        Return dq.Bytes & &HFFFF_FFFF
+        Return dq.Bytes And &HFFFF_FFFF
     End Operator
+
+    Public Shared Function FromKilobytes(nKB As Long) As DataQuantity
+        Return New DataQuantity(nKB * 1024)
+    End Function
+
+    Public Shared Function FromMegabytes(nMB As Long) As DataQuantity
+        Return New DataQuantity(nMB * 1024 * 1024)
+    End Function
+
+    Public Shared Function FromGigabytes(nGB As Long) As DataQuantity
+        Return New DataQuantity(nGB * 1024 * 1024 * 1024)
+    End Function
+
+    Public Shared Function FromTerabytes(nTB As Long) As DataQuantity
+        Return New DataQuantity(nTB * 1024 * 1024 * 1024 * 1024)
+    End Function
 End Class

@@ -138,6 +138,64 @@ Public Class Harddisk
         Public nRawPropertiesLength As UInteger
     End Class
 
+    Private Enum PartitionStyle As UInteger
+        MBR
+        GPT
+        RAW
+    End Enum
+
+    <StructLayout(LayoutKind.Sequential)>
+    Private Class CreateDiskMBR
+        Public style As PartitionStyle = PartitionStyle.MBR
+        Public nSignature As Integer
+        <MarshalAs(UnmanagedType.ByValArray, SizeConst:=16)>
+        Public ReadOnly arrDummy(15) As Byte
+    End Class
+
+    <StructLayout(LayoutKind.Sequential)>
+    Private Class CreateDiskGPT
+        Public style As PartitionStyle = PartitionStyle.GPT
+        Public idDisk As Guid
+        Public nMaxPartCount As Integer
+    End Class
+
+    <StructLayout(LayoutKind.Sequential)>
+    Private Structure PartitionInformation
+        Public nStartingOffset As Long
+        Public nPartitionLength As Long
+        Public nHiddenSectors As Integer
+        Public nPartitionNumber As Integer
+        Public nPartitionType As Byte
+        <MarshalAs(UnmanagedType.I1)> Public bBootIndicator As Boolean
+        <MarshalAs(UnmanagedType.I1)> Public bRecognizedPartition As Boolean
+        <MarshalAs(UnmanagedType.I1)> Public bRewritePartition As Boolean
+    End Structure
+
+    <StructLayout(LayoutKind.Sequential)>
+    Private Class DriveLayoutInformationMBR
+        Public nPartitionCount As Integer
+        Public nSignature As Integer
+        <MarshalAs(UnmanagedType.ByValArray, SizeConst:=4)>
+        Public arrPartitionEntries(3) As PartitionInformation
+    End Class
+
+    Public Structure PartitionPrototype
+        Dim nLength As DataQuantity
+        'Dim nType As Byte
+        Dim bBootable As Boolean
+
+        'Public Const PARTTYPE_EXTENDED As Byte = &H5
+        'Public Const PARTTYPE_RAW As Byte = &H6
+        'Public Const PARTTYPE_NTFS As Byte = &H7
+        'Public Const PARTTYPE_FAT32_CHS As Byte = &HC
+        'Public Const PARTTYPE_FAT32 As Byte = &HC
+        'Public Const PARTTYPE_FAT16 As Byte = &HE
+        'Public Const PARTTYPE_NTFS_RECOVERY As Byte = &H27
+        'Public Const PARTTYPE_DYNAMICVOL As Byte = &H42
+        'Public Const PARTTYPE_GPT As Byte = &HEE
+        'Public Const PARTTYPE_EFI As Byte = &HEF
+    End Structure
+
     Private mNumber As Integer
     Private mGeometry As DiskGeometry
     Private mInfoStringsRead As Boolean = False
@@ -267,4 +325,55 @@ Public Class Harddisk
             End If
         End Get
     End Property
+
+    Private Function GenerateSignature() As Integer
+        Return CInt(Date.Now.ToBinary And &H7FFF_FFFF)
+    End Function
+
+    Public Sub ReinitializeMBR(Optional nSignature As Integer = -1)
+        If nSignature = -1 Then
+            nSignature = GenerateSignature()
+        End If
+
+        Dim cdMBR As New CreateDiskMBR With {.nSignature = nSignature}
+        IOControl(IOCTL_DISK_CREATE_DISK, cdMBR, Nothing)
+    End Sub
+
+    Public Sub Partition(arrParts() As PartitionPrototype, Optional nSignature As Integer = -1)
+        If nSignature = -1 Then
+            nSignature = GenerateSignature()
+        End If
+
+        Dim infLayout As New DriveLayoutInformationMBR With {
+            .nPartitionCount = arrParts.Length,
+            .nSignature = nSignature
+        }
+
+        Dim nMBRMax As Long = DataQuantity.FromTerabytes(2).Bytes
+        Dim nSpacing As Long = DataQuantity.FromMegabytes(2).Bytes
+
+        Dim nDiskSize As Long = Size.Bytes
+        If nDiskSize > nMBRMax Then
+            nDiskSize = nMBRMax
+        End If
+
+        Dim nCurPos As Long = nSpacing
+        For nPart = 0 To arrParts.Length - 1
+            infLayout.arrPartitionEntries(nPart).nStartingOffset = nCurPos
+            infLayout.arrPartitionEntries(nPart).nPartitionLength _
+                = If(arrParts(nPart).nLength IsNot Nothing, arrParts(nPart).nLength, nDiskSize - (nCurPos + nSpacing))
+            infLayout.arrPartitionEntries(nPart).nPartitionNumber = nPart + 1
+            infLayout.arrPartitionEntries(nPart).nPartitionType = 6 'arrParts(nPart).nType
+            infLayout.arrPartitionEntries(nPart).bBootIndicator = arrParts(nPart).bBootable
+            infLayout.arrPartitionEntries(nPart).bRecognizedPartition = True
+            infLayout.arrPartitionEntries(nPart).bRewritePartition = True
+
+            nCurPos += infLayout.arrPartitionEntries(nPart).nPartitionLength + nSpacing
+            If nCurPos > nDiskSize Then
+                Throw New ArgumentOutOfRangeException("arrParts", "Not enough space on disk for all partitions")
+            End If
+        Next
+
+        IOControl(IOCTL_DISK_SET_DRIVE_LAYOUT, infLayout, Nothing)
+    End Sub
 End Class

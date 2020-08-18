@@ -332,12 +332,26 @@ Public Class MainForm
 
             If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
             InstallWorker.ReportProgress(-1, "Initializing disk...")
+            mTargetDisk.ReinitializeMBR()
 
-            Do
-                If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
-                Threading.Thread.Sleep(1000)
-            Loop
+            Dim arrParts() As Harddisk.PartitionPrototype = {
+                New Harddisk.PartitionPrototype With { ' System (boot)
+                    .bBootable = True,
+                    .nLength = DataQuantity.FromMegabytes(100)
+                },
+                New Harddisk.PartitionPrototype With { ' Recovery
+                    .bBootable = False,
+                    .nLength = DataQuantity.FromMegabytes(500)
+                },
+                New Harddisk.PartitionPrototype With { ' Windows (main)
+                    .bBootable = False,
+                    .nLength = Nothing
+                }
+            }
 
+            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            InstallWorker.ReportProgress(-1, "Partitioning disk...")
+            mTargetDisk.Partition(arrParts)
         Catch ex As Exception
             e.Result = ex
         End Try
