@@ -1,183 +1,8 @@
 ﻿Imports System.Runtime.InteropServices
+Imports Electroduck.WinIt.DiskInternal
 
 Public Class Harddisk
     Inherits FileLike
-
-    Private Const IOCTL_DISK_GET_DRIVE_GEOMETRY As Integer = &H0007_0000
-    Private Const IOCTL_DISK_SET_DRIVE_LAYOUT As Integer = &H0007_C010
-    Private Const IOCTL_DISK_CREATE_DISK As Integer = &H0007_C058
-    Private Const IOCTL_DISK_GET_LENGTH_INFO As Integer = &H0007_405C
-    Private Const IOCTL_STORAGE_QUERY_PROPERTY As Integer = &H002D_1400
-
-    Private Enum MediaType As UInteger
-        Unknown
-        F5_1Pt2_512
-        F3_1Pt44_512
-        F3_2Pt88_512
-        F3_20Pt8_512
-        F3_720_512
-        F5_360_512
-        F5_320_512
-        F5_320_1024
-        F5_180_512
-        F5_160_512
-        RemovableMedia
-        FixedMedia
-        F3_120M_512
-        F3_640_512
-        F5_640_512
-        F5_720_512
-        F3_1Pt2_512
-        F3_1Pt23_1024
-        F5_1Pt23_1024
-        F3_128Mb_512
-        F3_230Mb_512
-        F8_256_128
-        F3_200Mb_512
-        F3_240M_512
-        F3_32M_512
-    End Enum
-
-    <StructLayout(LayoutKind.Sequential)>
-    Private Class DiskGeometry
-        Public nCylinders As ULong
-        Public typeMedia As MediaType
-        Public nTracksPerCylinder As UInteger
-        Public nSectorsPerTrack As UInteger
-        Public nBytesPerSector As UInteger
-    End Class
-
-    Private Enum StoragePropertyID As UInteger
-        StorageDeviceProperty
-        StorageAdapterProperty
-        StorageDeviceIdProperty
-        StorageDeviceUniqueIdProperty
-        StorageDeviceWriteCacheProperty
-        StorageMiniportProperty
-        StorageAccessAlignmentProperty
-        StorageDeviceSeekPenaltyProperty
-        StorageDeviceTrimProperty
-        StorageDeviceWriteAggregationProperty
-        StorageDeviceDeviceTelemetryProperty
-        StorageDeviceLBProvisioningProperty
-        StorageDevicePowerProperty
-        StorageDeviceCopyOffloadProperty
-        StorageDeviceResiliencyProperty
-        StorageDeviceMediumProductType
-        StorageAdapterRpmbProperty
-        StorageAdapterCryptoProperty
-        StorageDeviceIoCapabilityProperty
-        StorageAdapterProtocolSpecificProperty
-        StorageDeviceProtocolSpecificProperty
-        StorageAdapterTemperatureProperty
-        StorageDeviceTemperatureProperty
-        StorageAdapterPhysicalTopologyProperty
-        StorageDevicePhysicalTopologyProperty
-        StorageDeviceAttributesProperty
-        StorageDeviceManagementStatus
-        StorageAdapterSerialNumberProperty
-        StorageDeviceLocationProperty
-        StorageDeviceNumaProperty
-        StorageDeviceZonedDeviceProperty
-        StorageDeviceUnsafeShutdownCount
-        StorageDeviceEnduranceProperty
-    End Enum
-
-    Private Enum StorageQueryType As UInteger
-        PropertyStandardQuery
-        PropertyExistsQuery
-        PropertyMaskQuery
-        PropertyQueryMaxDefined
-    End Enum
-
-    <StructLayout(LayoutKind.Sequential)>
-    Private Class StoragePropertyQuery
-        Public prop As StoragePropertyID
-        Public qtype As StorageQueryType
-        <MarshalAs(UnmanagedType.ByValArray, SizeConst:=1)> Public arrExtraData(1) As Byte
-    End Class
-
-    Private Enum StorageBusType As UInteger
-        BusTypeUnknown
-        BusTypeScsi
-        BusTypeAtapi
-        BusTypeAta
-        BusType1394
-        BusTypeSsa
-        BusTypeFibre
-        BusTypeUsb
-        BusTypeRAID
-        BusTypeiScsi
-        BusTypeSas
-        BusTypeSata
-        BusTypeSd
-        BusTypeMmc
-        BusTypeVirtual
-        BusTypeFileBackedVirtual
-        BusTypeSpaces
-        BusTypeNvme
-        BusTypeSCM
-        BusTypeUfs
-        BusTypeMax
-        BusTypeMaxReserved
-    End Enum
-
-    <StructLayout(LayoutKind.Sequential)>
-    Private Class StorageDeviceDescriptorHeader
-        Public nVersion As UInteger
-        Public nSize As UInteger
-        Public nDeviceType As Byte
-        Public nDeviceTypeModifier As Byte
-        <MarshalAs(UnmanagedType.I1)> Public bRemovableMedia As Boolean
-        <MarshalAs(UnmanagedType.I1)> Public bCommandQueueing As Boolean
-        Public nVendorIDOffset As UInteger
-        Public nProductIDOffset As UInteger
-        Public nProductRevisionOffset As UInteger
-        Public nSerialNumberOffset As UInteger
-        Public bustype As StorageBusType
-        Public nRawPropertiesLength As UInteger
-    End Class
-
-    Private Enum PartitionStyle As UInteger
-        MBR
-        GPT
-        RAW
-    End Enum
-
-    <StructLayout(LayoutKind.Sequential)>
-    Private Class CreateDiskMBR
-        Public style As PartitionStyle = PartitionStyle.MBR
-        Public nSignature As Integer
-        <MarshalAs(UnmanagedType.ByValArray, SizeConst:=16)>
-        Public ReadOnly arrDummy(15) As Byte
-    End Class
-
-    <StructLayout(LayoutKind.Sequential)>
-    Private Class CreateDiskGPT
-        Public style As PartitionStyle = PartitionStyle.GPT
-        Public idDisk As Guid
-        Public nMaxPartCount As Integer
-    End Class
-
-    <StructLayout(LayoutKind.Sequential)>
-    Private Structure PartitionInformation
-        Public nStartingOffset As Long
-        Public nPartitionLength As Long
-        Public nHiddenSectors As Integer
-        Public nPartitionNumber As Integer
-        Public nPartitionType As Byte
-        <MarshalAs(UnmanagedType.I1)> Public bBootIndicator As Boolean
-        <MarshalAs(UnmanagedType.I1)> Public bRecognizedPartition As Boolean
-        <MarshalAs(UnmanagedType.I1)> Public bRewritePartition As Boolean
-    End Structure
-
-    <StructLayout(LayoutKind.Sequential)>
-    Private Class DriveLayoutInformationMBR
-        Public nPartitionCount As Integer
-        Public nSignature As Integer
-        <MarshalAs(UnmanagedType.ByValArray, SizeConst:=4)>
-        Public arrPartitionEntries(3) As PartitionInformation
-    End Class
 
     Public Structure PartitionPrototype
         Dim nLength As DataQuantity
@@ -254,6 +79,14 @@ Public Class Harddisk
         Get
             CheckGeometry()
             Return mGeometry.typeMedia <> MediaType.FixedMedia
+        End Get
+    End Property
+
+    Public ReadOnly Property GeometryDU As DiscUtils.Geometry
+        Get
+            CheckGeometry()
+            Return New DiscUtils.Geometry(CInt(mGeometry.nCylinders), CInt(mGeometry.nTracksPerCylinder),
+                                          CInt(mGeometry.nSectorsPerTrack), CInt(mGeometry.nBytesPerSector))
         End Get
     End Property
 
@@ -339,7 +172,7 @@ Public Class Harddisk
         IOControl(IOCTL_DISK_CREATE_DISK, cdMBR, Nothing)
     End Sub
 
-    Public Sub Partition(arrParts() As PartitionPrototype, Optional nSignature As Integer = -1)
+    Public Sub RepartitionMBR(arrParts() As PartitionPrototype, Optional nSignature As Integer = -1)
         If nSignature = -1 Then
             nSignature = GenerateSignature()
         End If
@@ -376,4 +209,18 @@ Public Class Harddisk
 
         IOControl(IOCTL_DISK_SET_DRIVE_LAYOUT, infLayout, Nothing)
     End Sub
+
+    Public ReadOnly Property Partition(nPart As Integer) As Partition
+        Get
+            Return New Partition(Me, nPart)
+        End Get
+    End Property
+
+    Public Overrides ReadOnly Property Length As Long
+        Get
+            Dim infLength As New LengthInfo
+            IOControl(IOCTL_DISK_GET_LENGTH_INFO, Nothing, infLength)
+            Return infLength.nLength
+        End Get
+    End Property
 End Class

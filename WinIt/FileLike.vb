@@ -1,4 +1,5 @@
-﻿Imports System.Runtime.InteropServices
+﻿Imports System.IO
+Imports System.Runtime.InteropServices
 
 Public Class FileLike
     Implements IDisposable
@@ -41,8 +42,21 @@ Public Class FileLike
          pOutBuf As IntPtr, nOutBufSize As UInteger, ByRef rnBytesRet As UInteger,
          pOverlapped As IntPtr) As Boolean
 
+    Private Declare Ansi Function FlushFileBuffers Lib "kernel32.dll" (hFile As IntPtr) As Boolean
+
+    Private Declare Ansi Function SetFilePointerEx Lib "kernel32.dll" _
+        (hFile As IntPtr, nDistMove As Long, ByRef rnNewPointer As Long, mthd As SeekOrigin) As Boolean
+
+    Private Declare Ansi Function ReadFile Lib "kernel32.dll" _
+        (hFile As IntPtr, pBuffer As IntPtr, nToRead As Integer, ByRef rnRead As Integer, pOverlapped As IntPtr) As Boolean
+
+    Private Declare Ansi Function WriteFile Lib "kernel32.dll" _
+        (hFile As IntPtr, pBuffer As IntPtr, nToWrite As Integer, ByRef rnWritten As Integer, pOverlapped As IntPtr) As Boolean
+
     Private mPath As String
     Private mHandle As IntPtr
+    Private mAccess As AccessLevel
+    Private mStream As FileLikeStream
 
     Protected Overridable ReadOnly Property Path As String
         Get
@@ -56,46 +70,35 @@ Public Class FileLike
         End Get
     End Property
 
+    Public ReadOnly Property Access As AccessLevel
+        Get
+            Return mAccess
+        End Get
+    End Property
+
+    Public Overridable ReadOnly Property Length As Long
+        Get
+            Throw New NotImplementedException
+        End Get
+    End Property
+
+    Public Overridable ReadOnly Property Stream As Stream
+        Get
+            Return mStream
+        End Get
+    End Property
+
     Public Sub New(strPath As String, access As AccessLevel, sm As ShareMode, cd As CreationDisposition)
         mPath = strPath
+        mAccess = access
 
         mHandle = CreateFile(strPath, access, sm, IntPtr.Zero, cd, IntPtr.Zero)
         If mHandle = IntPtr.Zero Or mHandle = INVALID_HANDLE_VALUE Then
             Throw New ComponentModel.Win32Exception(Err.LastDllError)
         End If
+
+        mStream = New FileLikeStream(Me)
     End Sub
-
-#If 0 Then
-    Public Sub IOControl(nCode As Integer, objIn As Object, objOut As Object)
-        Dim blkIn As MemoryBlock = Nothing
-        If objIn IsNot Nothing Then
-            blkIn = New MemoryBlock(Marshal.SizeOf(objIn))
-            Marshal.StructureToPtr(objIn, blkIn.Pointer, False)
-        End If
-
-        Try
-            Dim blkOut As MemoryBlock = Nothing
-            If objOut IsNot Nothing Then
-                blkOut = New MemoryBlock(Marshal.SizeOf(objOut))
-                Marshal.StructureToPtr(objOut, blkOut.Pointer, False)
-            End If
-
-            Try
-                IOControl(nCode, blkIn, blkOut)
-            Finally
-                If objOut IsNot Nothing Then
-                    Marshal.PtrToStructure(blkOut.Pointer, objOut)
-                    Marshal.DestroyStructure(blkOut.Pointer, objOut.GetType)
-                End If
-            End Try
-
-        Finally
-            If objIn IsNot Nothing Then
-                Marshal.DestroyStructure(blkIn.Pointer, objIn)
-            End If
-        End Try
-    End Sub
-#End If
 
     Public Sub IOControl(nCode As Integer, objIn As Object, objOut As Object)
         Dim blkIn As StructMemoryBlock = Nothing
@@ -130,6 +133,91 @@ Public Class FileLike
 
         Return nBytesRet
     End Function
+
+    Protected Overridable Sub Flush()
+        If Not FlushFileBuffers(mHandle) Then
+            Throw New ComponentModel.Win32Exception(Err.LastDllError)
+        End If
+    End Sub
+
+    Private Class FileLikeStream
+        Inherits Stream
+
+        Private mFile As FileLike
+
+        Public Overrides ReadOnly Property CanRead As Boolean
+            Get
+                Return True
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property CanSeek As Boolean
+            Get
+                Return True
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property CanWrite As Boolean
+            Get
+                Return True
+            End Get
+        End Property
+
+        Public Overrides ReadOnly Property Length As Long
+            Get
+                Return mFile.Length
+            End Get
+        End Property
+
+        Public Overrides Property Position As Long
+            Get
+                Return Seek(0, SeekOrigin.Current)
+            End Get
+            Set(nValue As Long)
+                Seek(nValue, SeekOrigin.Begin)
+            End Set
+        End Property
+
+        Public Sub New(f As FileLike)
+            mFile = f
+        End Sub
+
+        Public Overrides Sub Flush()
+            mFile.Flush()
+        End Sub
+
+        Public Overrides Sub SetLength(value As Long)
+            Throw New NotImplementedException()
+        End Sub
+
+        Public Overrides Sub Write(arrBuffer() As Byte, nOffset As Integer, nCount As Integer)
+            Using blkTemp As New MemoryBlock(nCount)
+                Marshal.Copy(arrBuffer, nOffset, blkTemp.Pointer, nCount)
+                If Not WriteFile(mFile.mHandle, blkTemp.Pointer, nCount, Nothing, IntPtr.Zero) Then
+                    Throw New ComponentModel.Win32Exception(Err.LastDllError)
+                End If
+            End Using
+        End Sub
+
+        Public Overrides Function Seek(nOffset As Long, origin As SeekOrigin) As Long
+            Dim nNewPos As Long
+            If Not SetFilePointerEx(mFile.mHandle, nOffset, nNewPos, origin) Then
+                Throw New ComponentModel.Win32Exception(Err.LastDllError)
+            End If
+            Return nNewPos
+        End Function
+
+        Public Overrides Function Read(arrBuffer() As Byte, nOffset As Integer, nCount As Integer) As Integer
+            Using blkTemp As New MemoryBlock(nCount)
+                Dim nRead As Integer
+                If Not ReadFile(mFile.mHandle, blkTemp.Pointer, nCount, nRead, IntPtr.Zero) Then
+                    Throw New ComponentModel.Win32Exception(Err.LastDllError)
+                End If
+                Marshal.Copy(blkTemp.Pointer, arrBuffer, nOffset, nRead)
+                Return nRead
+            End Using
+        End Function
+    End Class
 
 #Region "IDisposable Support"
     Private mDisposed As Boolean ' To detect redundant calls

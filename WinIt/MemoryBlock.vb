@@ -26,6 +26,16 @@ Public Class MemoryBlock
         End If
     End Sub
 
+    Public Shared Function FromString(str As String, fmt As Text.Encoding)
+        Return FromArray(fmt.GetBytes(str))
+    End Function
+
+    Public Shared Function FromArray(arrData() As Byte)
+        Dim blk As New MemoryBlock(arrData.Length)
+        Marshal.Copy(arrData, 0, blk.Pointer, arrData.Length)
+        Return blk
+    End Function
+
     Public Sub BlockToStructure(objStruct As Object)
         Marshal.PtrToStructure(Pointer, objStruct)
     End Sub

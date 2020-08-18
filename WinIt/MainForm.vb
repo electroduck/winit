@@ -351,7 +351,22 @@ Public Class MainForm
 
             If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
             InstallWorker.ReportProgress(-1, "Partitioning disk...")
-            mTargetDisk.Partition(arrParts)
+            mTargetDisk.RepartitionMBR(arrParts)
+
+            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            InstallWorker.ReportProgress(-1, "Formatting boot partition...")
+            Dim partBoot As Partition = mTargetDisk.Partition(1)
+            partBoot.Format("NTFS", "Boot")
+
+            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            InstallWorker.ReportProgress(-1, "Formatting recovery partition...")
+            Dim partRecovery As Partition = mTargetDisk.Partition(2)
+            partRecovery.Format("NTFS", "Recovery")
+
+            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            InstallWorker.ReportProgress(-1, "Formatting main partition...")
+            Dim partWindows As Partition = mTargetDisk.Partition(3)
+            partWindows.Format("NTFS", "Windows")
         Catch ex As Exception
             e.Result = ex
         End Try
