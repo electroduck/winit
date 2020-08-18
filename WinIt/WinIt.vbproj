@@ -130,9 +130,18 @@
     <Compile Include="Partition.vb" />
     <Compile Include="StructMemoryBlock.vb" />
     <Compile Include="TempFiles.vb" />
+    <Compile Include="TestingForm.Designer.vb">
+      <DependentUpon>TestingForm.vb</DependentUpon>
+    </Compile>
+    <Compile Include="TestingForm.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="WebUtil.vb" />
+    <Compile Include="WIMHandle.vb" />
     <Compile Include="Win10ConsumerDL.vb" />
     <Compile Include="Win32Util.vb" />
+    <Compile Include="WindowsImage.vb" />
+    <Compile Include="WindowsImageFile.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MainForm.resx">
@@ -143,6 +152,9 @@
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TestingForm.resx">
+      <DependentUpon>TestingForm.vb</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

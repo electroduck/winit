@@ -388,6 +388,48 @@ Public Class MainForm
             InstallWorker.ReportProgress(-1, "Mounting main partition...")
             Dim strWindowsMount As String = IO.Path.Combine(TempFolder, "Windows_" & Guid.NewGuid.ToString("n"))
             partWindows.Mount(strWindowsMount)
+
+            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            InstallWorker.ReportProgress(-1, "Reading image file...")
+            Dim wim As New WindowsImageFile(strWIMPath)
+
+            Dim imgToInstall As WindowsImage
+            If wim.ImageCount > 1 Then
+                Dim pageChooseImage As New TaskDialogPage With {
+                    .AllowCancel = False,
+                    .CanBeMinimized = False,
+                    .Instruction = "Choose Windows edition",
+                    .Text = "The installer you selected contains several different editions of Windows. " &
+                        "Select the one you would like to install.",
+                    .Title = "Choose Edition"
+                }
+
+                pageChooseImage.StandardButtons.Add(TaskDialogResult.Cancel)
+                pageChooseImage.StandardButtons.Add(TaskDialogResult.OK)
+                pageChooseImage.StandardButtons.Item(TaskDialogResult.OK).Enabled = False
+
+                For nImage = 1 To wim.ImageCount
+                    Dim img As New WindowsImage(wim, nImage)
+                    Dim rbCurImg As New TaskDialogRadioButton With {
+                        .Text = img.DisplayName,
+                        .Tag = img
+                    }
+
+                    AddHandler rbCurImg.CheckedChanged,
+                        Sub()
+                            pageChooseImage.StandardButtons.Item(TaskDialogResult.OK).Enabled = True
+                            If rbCurImg.Checked Then
+                                imgToInstall = img
+                            End If
+                        End Sub
+                Next
+
+                Dim dlgChooseImage As New TaskDialog(pageChooseImage)
+                If DirectCast(dlgChooseImage.Show(Me), TaskDialogStandardButton).Result <> TaskDialogResult.OK Then
+                    Throw New InstallCancelledException
+                End If
+            End If
+
         Catch ex As Exception
             e.Result = ex
         End Try
