@@ -290,6 +290,7 @@ Public Class MainForm
 
     Private Const ISO_PATH_WIM As String = "sources\install.wim"
     Private Const ISO_EXTRACT_BLOCKSIZE As Long = 1024 * 512
+    Private Const RECOVERY_WIMCOPY_BLOCKSIZE As Long = 1024 * 512
 
     Private Sub InstallWorker_DoWork(sender As Object, e As DoWorkEventArgs) Handles InstallWorker.DoWork
         e.Result = Nothing
@@ -483,9 +484,56 @@ Public Class MainForm
             If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
             InstallWorker.ReportProgress(-1, "Copying Windows files...")
             imgToInstall.Apply(strWindowsMount)
-
             imgToInstall.Dispose()
             wim.Dispose()
+
+            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            InstallWorker.ReportProgress(-1, "Copying boot files...")
+            Dim psiBCDBoot As New ProcessStartInfo With {
+                .Arguments = String.Format("""{0}"" /s ""{1}""", strWindowsMount, strBootMount),
+                .FileName = IO.Path.Combine(strWindowsMount, "Windows\System32\bcdboot.exe"),
+                .WindowStyle = ProcessWindowStyle.Minimized
+            }
+
+            Dim pcssBCDBoot As Process = Process.Start(psiBCDBoot)
+            pcssBCDBoot.WaitForExit()
+            If pcssBCDBoot.ExitCode <> 0 Then
+                Throw New Exception("BCDBoot returned error code " & pcssBCDBoot.ExitCode)
+            End If
+
+            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            InstallWorker.ReportProgress(-1, "Copying recovery image...")
+            Dim strWindowsREDir As String = IO.Path.Combine(strRecoveryMount, "Recovery\WindowsRE")
+            IO.Directory.CreateDirectory(strWindowsREDir)
+
+            Dim nExtractedBytes2 As Long = 0
+            Dim nRead2 As Long = 0
+            Dim arrData2(RECOVERY_WIMCOPY_BLOCKSIZE - 1) As Byte
+            Using stmRecoveryImageIn As IO.Stream = IO.File.OpenRead(IO.Path.Combine(strWindowsMount, "Windows\System32\Recovery\Winre.wim"))
+                Using stmRecoveryImageOut As IO.Stream = IO.File.OpenWrite(IO.Path.Combine(strWindowsREDir, "Winre.wim"))
+                    While nExtractedBytes2 < stmRecoveryImageIn.Length
+                        If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+                        nRead2 = stmRecoveryImageIn.Read(arrData2, 0, arrData2.Length)
+                        nExtractedBytes2 += nRead2
+                        InstallWorker.ReportProgress((nExtractedBytes2 / stmRecoveryImageIn.Length) * 100, "Copying recovery image...")
+                    End While
+                End Using
+            End Using
+
+            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            InstallWorker.ReportProgress(-1, "Registering recovery image...")
+            Dim psiReagent As New ProcessStartInfo With {
+                .Arguments = String.Format("/Setreimage /Path ""{0}"" /Target ""{1}""",
+                                           strWindowsREDir, IO.Path.Combine(strWindowsMount, "Windows")),
+                .FileName = IO.Path.Combine(strWindowsMount, "Windows\System32\Reagentc.exe"),
+                .WindowStyle = ProcessWindowStyle.Minimized
+            }
+
+            Dim pcssReagent As Process = Process.Start(psiReagent)
+            pcssReagent.WaitForExit()
+            If pcssReagent.ExitCode <> 0 Then
+                Throw New Exception("Reagent returned error code " & pcssReagent.ExitCode)
+            End If
         Catch ex As Exception
             e.Result = ex
         End Try
