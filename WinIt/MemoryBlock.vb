@@ -3,6 +3,8 @@
 Public Class MemoryBlock
     Implements IDisposable
 
+    Private Declare Ansi Sub RtlZeroMemory Lib "kernel32.dll" (pBlock As IntPtr, nSize As IntPtr)
+
     Private mPointer As IntPtr
     Private mSize As Integer
 
@@ -63,6 +65,10 @@ Public Class MemoryBlock
         Marshal.Copy(mPointer + nOffset, arrData, 0, nCount)
         Return arrData
     End Function
+
+    Public Sub Clear()
+        RtlZeroMemory(mPointer, mSize)
+    End Sub
 
 #Region "IDisposable Support"
     Private mDisposed As Boolean ' To detect redundant calls

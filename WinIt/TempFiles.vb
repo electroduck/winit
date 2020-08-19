@@ -13,7 +13,8 @@
     Public Sub CleanTempFiles()
         SyncLock mTempFolder
             If mTempFolder.Length > 0 Then
-                IO.Directory.Delete(mTempFolder, True)
+                ShellDelete(mTempFolder)
+                'IO.Directory.Delete(mTempFolder, True)
                 mTempFolder = ""
             End If
         End SyncLock

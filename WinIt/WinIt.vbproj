@@ -128,6 +128,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Partition.vb" />
+    <Compile Include="ShellFileOp.vb" />
     <Compile Include="StructMemoryBlock.vb" />
     <Compile Include="TempFiles.vb" />
     <Compile Include="TestingForm.Designer.vb">
@@ -138,6 +139,7 @@
     </Compile>
     <Compile Include="WebUtil.vb" />
     <Compile Include="WIMHandle.vb" />
+    <Compile Include="WIMInternal.vb" />
     <Compile Include="Win10ConsumerDL.vb" />
     <Compile Include="Win32Util.vb" />
     <Compile Include="WindowsImage.vb" />

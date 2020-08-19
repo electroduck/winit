@@ -25,4 +25,5 @@
         ForceChangeValue(icnManaged, "ownHandle", True)
         Return icnManaged
     End Function
+
 End Module

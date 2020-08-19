@@ -10,8 +10,10 @@ Public Class MainForm
     Private mBlockage As String
     Private mBlockageTipShowing As Boolean
     Private mCancelDialog As TaskDialog
+    Private mFormHandle As IntPtr
 
     Private Sub MainForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        mFormHandle = Handle
         mSelDiskBrush = New SolidBrush(Color.FromArgb(128, SystemColors.Highlight))
         mDiskIcon = GetIcon("shell32.dll", 79, True)
         AdjustPanelWidths()
@@ -117,7 +119,7 @@ Public Class MainForm
         page.StandardButtons.Add(TaskDialogResult.OK)
 
         Dim dlgError As New TaskDialog(page)
-        dlgError.Show()
+        dlgError.Show(mFormHandle)
     End Sub
 
     Private Sub MainForm_Closing(objSender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
@@ -393,7 +395,7 @@ Public Class MainForm
             InstallWorker.ReportProgress(-1, "Reading image file...")
             Dim wim As New WindowsImageFile(strWIMPath)
 
-            Dim imgToInstall As WindowsImage
+            Dim imgToInstall As WindowsImage = Nothing
             If wim.ImageCount > 1 Then
                 Dim pageChooseImage As New TaskDialogPage With {
                     .AllowCancel = False,
@@ -419,20 +421,76 @@ Public Class MainForm
                         Sub()
                             pageChooseImage.StandardButtons.Item(TaskDialogResult.OK).Enabled = True
                             If rbCurImg.Checked Then
-                                imgToInstall = img
+                                imgToInstall = rbCurImg.Tag
                             End If
                         End Sub
+
+                    pageChooseImage.RadioButtons.Add(rbCurImg)
                 Next
 
                 Dim dlgChooseImage As New TaskDialog(pageChooseImage)
-                If DirectCast(dlgChooseImage.Show(Me), TaskDialogStandardButton).Result <> TaskDialogResult.OK Then
+                If DirectCast(dlgChooseImage.Show(mFormHandle), TaskDialogStandardButton).Result <> TaskDialogResult.OK Then
                     Throw New InstallCancelledException
                 End If
+
+                For Each rb As TaskDialogRadioButton In pageChooseImage.RadioButtons
+                    If rb.Tag IsNot imgToInstall Then
+                        DirectCast(rb.Tag, IDisposable).Dispose()
+                    End If
+                Next
+            Else
+                imgToInstall = New WindowsImage(wim, 1)
             End If
 
+            Dim exWIMError As Exception = Nothing
+            Dim strProblemFile As String = ""
+
+            AddHandler wim.Progress,
+                Sub(nPercentDone As Integer, nMillisLeft As Integer)
+                    Dim tsLeft As TimeSpan = TimeSpan.FromMilliseconds(nMillisLeft)
+                    InstallWorker.ReportProgress(nPercentDone,
+                        String.Format("Copying Windows files ({0:F0} {1}s left)...",
+                            If(tsLeft.TotalMinutes >= 1.0, tsLeft.TotalMinutes, tsLeft.TotalSeconds),
+                            If(tsLeft.TotalMinutes >= 1.0, "minute", "second")))
+                End Sub
+
+            AddHandler wim.Error,
+                Sub(strFile As String, ex As Exception)
+                    exWIMError = ex
+                End Sub
+
+            AddHandler wim.Warning,
+                Sub(strFile As String, ex As Exception)
+                    Dim pageWarning As New TaskDialogPage With {
+                        .AllowCancel = False,
+                        .Icon = TaskDialogIcon.Get(TaskDialogStandardIcon.Warning),
+                        .Instruction = "Problem copying files",
+                        .Text = ex.Message & vbNewLine & vbNewLine & "File: " & strFile,
+                        .Title = "Warning"
+                    }
+
+                    pageWarning.StandardButtons.Add(TaskDialogResult.Abort)
+                    pageWarning.StandardButtons.Add(TaskDialogResult.Continue)
+
+                    Dim dlgWarning As New TaskDialog(pageWarning)
+                    If DirectCast(dlgWarning.Show(mFormHandle), TaskDialogStandardButton).Result = TaskDialogResult.Abort Then
+                        exWIMError = ex
+                        strProblemFile = strFile
+                        Throw ex
+                    End If
+                End Sub
+
+            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            InstallWorker.ReportProgress(-1, "Copying Windows files...")
+            imgToInstall.Apply(strWindowsMount)
+
+            imgToInstall.Dispose()
+            wim.Dispose()
         Catch ex As Exception
             e.Result = ex
         End Try
+
+        GC.Collect()
     End Sub
 
     Private Sub InstallWorker_Completed(sender As Object, e As RunWorkerCompletedEventArgs) Handles InstallWorker.RunWorkerCompleted

@@ -1,4 +1,5 @@
 ﻿Imports System.Runtime.InteropServices
+Imports Electroduck.WinIt.WIMInternal
 
 Public Class WindowsImage
     Inherits WIMHandle
@@ -7,6 +8,11 @@ Public Class WindowsImage
 
     Private Declare Unicode Function WIMGetImageInformation Lib "wimgapi.dll" _
         (hImage As IntPtr, ByRef rpImageInfo As IntPtr, ByRef nImageInfoLength As Integer) As Boolean
+
+    Private Declare Ansi Function LocalFree Lib "kernel32.dll" (pBlock As IntPtr) As IntPtr
+
+    Private Declare Unicode Function WIMApplyImage Lib "wimgapi.dll" _
+        (hImage As IntPtr, strPath As String, flags As WIMFlags) As Boolean
 
     Private mInfoXML As String
     Private mDisplayName As String
@@ -31,6 +37,7 @@ Public Class WindowsImage
 
         Dim arrInfo() As Byte = Array.CreateInstance(GetType(Byte), nImageInfoLen)
         Marshal.Copy(pImageInfo, arrInfo, 0, nImageInfoLen)
+        LocalFree(pImageInfo)
 
         Return Text.Encoding.Unicode.GetString(arrInfo)
     End Function
@@ -48,4 +55,10 @@ Public Class WindowsImage
             Return mDisplayName
         End Get
     End Property
+
+    Public Sub Apply(strTargetPath As String)
+        If Not WIMApplyImage(mHandle, strTargetPath, WIMFlags.None) Then
+            Throw New ComponentModel.Win32Exception(Err.LastDllError)
+        End If
+    End Sub
 End Class

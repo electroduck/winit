@@ -107,13 +107,15 @@ Partial Class MainForm
         '
         'ImageSelLbl
         '
-        Me.ImageSelLbl.AutoSize = True
+        Me.ImageSelLbl.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.ImageSelLbl.AutoEllipsis = True
         Me.ImageSelLbl.BackColor = System.Drawing.SystemColors.Window
         Me.ImageSelLbl.ForeColor = System.Drawing.SystemColors.GrayText
         Me.ImageSelLbl.Location = New System.Drawing.Point(25, 100)
         Me.ImageSelLbl.Margin = New System.Windows.Forms.Padding(3, 8, 3, 8)
         Me.ImageSelLbl.Name = "ImageSelLbl"
-        Me.ImageSelLbl.Size = New System.Drawing.Size(148, 17)
+        Me.ImageSelLbl.Size = New System.Drawing.Size(521, 17)
         Me.ImageSelLbl.TabIndex = 4
         Me.ImageSelLbl.Text = "No disk image selected."
         '
