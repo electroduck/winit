@@ -13,6 +13,7 @@ Public Class MainForm
     Private mFormHandle As IntPtr
 
     Private Sub MainForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Icon = My.Resources.ProgramIcon
         mFormHandle = Handle
         mSelDiskBrush = New SolidBrush(Color.FromArgb(128, SystemColors.Highlight))
         mDiskIcon = GetIcon("shell32.dll", 79, True)
@@ -151,7 +152,7 @@ Public Class MainForm
         Next
     End Sub
 
-    Private Sub TargetListView_SelectedIndexChanged(sender As Object, e As EventArgs) Handles TargetListView.SelectedIndexChanged
+    Private Sub TargetListView_SelectedIndexChanged(sender As Object, e As EventArgs)
         If TargetListView.SelectedIndices.Count = 0 Then
             mTargetDisk = Nothing
         Else
@@ -160,7 +161,7 @@ Public Class MainForm
         CheckCanInstall()
     End Sub
 
-    Private Sub TargetListView_DrawItem(sender As Object, e As DrawListViewItemEventArgs) Handles TargetListView.DrawItem
+    Private Sub TargetListView_DrawItem(sender As Object, e As DrawListViewItemEventArgs)
         If mTargetDisk IsNot Nothing AndAlso e.Item.Tag Is mTargetDisk Then
             e.Graphics.FillRectangle(mSelDiskBrush, e.Bounds)
         End If
@@ -289,8 +290,6 @@ Public Class MainForm
     End Sub
 
     Private Const ISO_PATH_WIM As String = "sources\install.wim"
-    Private Const ISO_EXTRACT_BLOCKSIZE As Long = 1024 * 512
-    Private Const RECOVERY_WIMCOPY_BLOCKSIZE As Long = 1024 * 512
 
     Private Sub InstallWorker_DoWork(sender As Object, e As DoWorkEventArgs) Handles InstallWorker.DoWork
         e.Result = Nothing
@@ -309,20 +308,30 @@ Public Class MainForm
                     Dim nWIMSize As Long = diskSource.GetFileLength(ISO_PATH_WIM)
                     strWIMPath = IO.Path.Combine(TempFolder, Guid.NewGuid.ToString("N") & ".iso")
 
-                    Dim nExtractedBytes As Long = 0
-                    Dim nRead As Long = 0
-                    Dim arrData(ISO_EXTRACT_BLOCKSIZE - 1) As Byte
+                    'Dim nExtractedBytes As Long = 0
+                    'Dim nRead As Long = 0
+                    'Dim arrData(ISO_EXTRACT_BLOCKSIZE - 1) As Byte
+                    'Using stmWIMOnISO As DiscUtils.Streams.SparseStream = diskSource.OpenFile(ISO_PATH_WIM, IO.FileMode.Open)
+                    '    Using stmWIMFile As IO.Stream = IO.File.Create(strWIMPath)
+                    '        While nExtractedBytes < nWIMSize
+                    '            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+
+                    '            nRead = stmWIMOnISO.Read(arrData, 0, ISO_EXTRACT_BLOCKSIZE)
+                    '            stmWIMFile.Write(arrData, 0, nRead)
+                    '            nExtractedBytes += nRead
+                    '            InstallWorker.ReportProgress((nExtractedBytes / nWIMSize) * 100.0,
+                    '                                         "Extracting Windows image...")
+                    '        End While
+                    '    End Using
+                    'End Using
+
                     Using stmWIMOnISO As DiscUtils.Streams.SparseStream = diskSource.OpenFile(ISO_PATH_WIM, IO.FileMode.Open)
                         Using stmWIMFile As IO.Stream = IO.File.Create(strWIMPath)
-                            While nExtractedBytes < nWIMSize
-                                If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
-
-                                nRead = stmWIMOnISO.Read(arrData, 0, ISO_EXTRACT_BLOCKSIZE)
-                                stmWIMFile.Write(arrData, 0, nRead)
-                                nExtractedBytes += nRead
-                                InstallWorker.ReportProgress((nExtractedBytes / nWIMSize) * 100.0,
-                                                             "Extracting Windows image...")
-                            End While
+                            CopyStreamWithProgress(stmWIMOnISO, stmWIMFile,
+                                Sub(nBytesCopied As Long, nBytesTotal As Long)
+                                    If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+                                    InstallWorker.ReportProgress((nBytesCopied / nBytesTotal) * 100, "Extracting Windows image...")
+                                End Sub)
                         End Using
                     End Using
                 End Using
@@ -377,20 +386,24 @@ Public Class MainForm
             Dim partWindows As Partition = mTargetDisk.Partition(3)
             partWindows.Format("NTFS", "Windows")
 
-            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
-            InstallWorker.ReportProgress(-1, "Mounting boot partition...")
-            Dim strBootMount As String = IO.Path.Combine(TempFolder, "Boot_" & Guid.NewGuid.ToString("n"))
-            partBoot.Mount(strBootMount)
+            'If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            'InstallWorker.ReportProgress(-1, "Mounting boot partition...")
+            'Dim strBootMount As String = IO.Path.Combine(TempFolder, "Boot_" & Guid.NewGuid.ToString("n"))
+            'partBoot.Mount(strBootMount)
 
-            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
-            InstallWorker.ReportProgress(-1, "Mounting recovery partition...")
-            Dim strRecoveryMount As String = IO.Path.Combine(TempFolder, "Recovery_" & Guid.NewGuid.ToString("n"))
-            partRecovery.Mount(strRecoveryMount)
+            'If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            'InstallWorker.ReportProgress(-1, "Mounting recovery partition...")
+            'Dim strRecoveryMount As String = IO.Path.Combine(TempFolder, "Recovery_" & Guid.NewGuid.ToString("n"))
+            'partRecovery.Mount(strRecoveryMount)
 
-            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
-            InstallWorker.ReportProgress(-1, "Mounting main partition...")
-            Dim strWindowsMount As String = IO.Path.Combine(TempFolder, "Windows_" & Guid.NewGuid.ToString("n"))
-            partWindows.Mount(strWindowsMount)
+            'If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            'InstallWorker.ReportProgress(-1, "Mounting main partition...")
+            'Dim strWindowsMount As String = IO.Path.Combine(TempFolder, "Windows_" & Guid.NewGuid.ToString("n"))
+            'partWindows.Mount(strWindowsMount)
+
+            Dim strBootMount As String = partBoot.DriveLetter & "\"
+            Dim strRecoveryMount As String = partRecovery.DriveLetter & "\"
+            Dim strWindowsMount As String = partWindows.DriveLetter & "\"
 
             If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
             InstallWorker.ReportProgress(-1, "Reading image file...")
@@ -448,11 +461,11 @@ Public Class MainForm
 
             AddHandler wim.Progress,
                 Sub(nPercentDone As Integer, nMillisLeft As Integer)
-                    Dim tsLeft As TimeSpan = TimeSpan.FromMilliseconds(nMillisLeft)
-                    InstallWorker.ReportProgress(nPercentDone,
-                        String.Format("Copying Windows files ({0:F0} {1}s left)...",
-                            If(tsLeft.TotalMinutes >= 1.0, tsLeft.TotalMinutes, tsLeft.TotalSeconds),
-                            If(tsLeft.TotalMinutes >= 1.0, "minute", "second")))
+                    'Dim tsLeft As TimeSpan = TimeSpan.FromMilliseconds(nMillisLeft)
+                    InstallWorker.ReportProgress(nPercentDone, "Copying Windows files...")
+                    'String.Format("Copying Windows files ({0:F0} {1}s left)...",
+                    '    If(tsLeft.TotalMinutes >= 1.0, tsLeft.TotalMinutes, tsLeft.TotalSeconds),
+                    '    If(tsLeft.TotalMinutes >= 1.0, "minute", "second")))
                 End Sub
 
             AddHandler wim.Error,
@@ -489,51 +502,34 @@ Public Class MainForm
 
             If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
             InstallWorker.ReportProgress(-1, "Copying boot files...")
-            Dim psiBCDBoot As New ProcessStartInfo With {
-                .Arguments = String.Format("""{0}"" /s ""{1}""", strWindowsMount, strBootMount),
-                .FileName = IO.Path.Combine(strWindowsMount, "Windows\System32\bcdboot.exe"),
-                .WindowStyle = ProcessWindowStyle.Minimized
-            }
-
-            Dim pcssBCDBoot As Process = Process.Start(psiBCDBoot)
-            pcssBCDBoot.WaitForExit()
-            If pcssBCDBoot.ExitCode <> 0 Then
-                Throw New Exception("BCDBoot returned error code " & pcssBCDBoot.ExitCode)
-            End If
+            CopyBootFiles(strWindowsMount, strBootMount)
 
             If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
             InstallWorker.ReportProgress(-1, "Copying recovery image...")
             Dim strWindowsREDir As String = IO.Path.Combine(strRecoveryMount, "Recovery\WindowsRE")
             IO.Directory.CreateDirectory(strWindowsREDir)
 
-            Dim nExtractedBytes2 As Long = 0
-            Dim nRead2 As Long = 0
-            Dim arrData2(RECOVERY_WIMCOPY_BLOCKSIZE - 1) As Byte
-            Using stmRecoveryImageIn As IO.Stream = IO.File.OpenRead(IO.Path.Combine(strWindowsMount, "Windows\System32\Recovery\Winre.wim"))
+            Dim strRecoveryImagePath As String = IO.Path.Combine(strWindowsMount, "Windows\System32\Recovery\Winre.wim")
+            Using stmRecoveryImageIn As IO.Stream = IO.File.OpenRead(strRecoveryImagePath)
                 Using stmRecoveryImageOut As IO.Stream = IO.File.OpenWrite(IO.Path.Combine(strWindowsREDir, "Winre.wim"))
-                    While nExtractedBytes2 < stmRecoveryImageIn.Length
-                        If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
-                        nRead2 = stmRecoveryImageIn.Read(arrData2, 0, arrData2.Length)
-                        nExtractedBytes2 += nRead2
-                        InstallWorker.ReportProgress((nExtractedBytes2 / stmRecoveryImageIn.Length) * 100, "Copying recovery image...")
-                    End While
+                    CopyStreamWithProgress(stmRecoveryImageIn, stmRecoveryImageOut,
+                        Sub(nBytesCopied As Long, nBytesTotal As Long)
+                            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+                            InstallWorker.ReportProgress((nBytesCopied / nBytesTotal) * 100, "Copying recovery image...")
+                        End Sub)
                 End Using
             End Using
 
             If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
             InstallWorker.ReportProgress(-1, "Registering recovery image...")
-            Dim psiReagent As New ProcessStartInfo With {
-                .Arguments = String.Format("/Setreimage /Path ""{0}"" /Target ""{1}""",
-                                           strWindowsREDir, IO.Path.Combine(strWindowsMount, "Windows")),
-                .FileName = IO.Path.Combine(strWindowsMount, "Windows\System32\Reagentc.exe"),
-                .WindowStyle = ProcessWindowStyle.Minimized
-            }
+            RegisterRecoveryImage(strWindowsMount, strRecoveryMount)
 
-            Dim pcssReagent As Process = Process.Start(psiReagent)
-            pcssReagent.WaitForExit()
-            If pcssReagent.ExitCode <> 0 Then
-                Throw New Exception("Reagent returned error code " & pcssReagent.ExitCode)
-            End If
+            If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
+            InstallWorker.ReportProgress(-1, "Setting boot and recovery partitions as hidden...")
+            partBoot.PartitionType = &H27
+            partRecovery.PartitionType = &H27
+
+            InstallWorker.ReportProgress(100, "Complete")
         Catch ex As Exception
             e.Result = ex
         End Try
@@ -573,4 +569,20 @@ Public Class MainForm
         End If
         ProgressText1Lbl.Text = e.UserState
     End Sub
+
+    Private Sub ShowDisclaimer()
+        Dim page As New TaskDialogPage With {
+            .Icon = TaskDialogStandardIcon.SecurityShield,
+            .Instruction = "Disclaimer",
+            .Text = My.Resources.Disclaimer,
+            .Title = "WinIt",
+            .Width = 200
+        }
+
+        page.StandardButtons.Add(TaskDialogResult.OK)
+
+        Dim dlgDisclaimer As New TaskDialog(page)
+        dlgDisclaimer.Show(Me)
+    End Sub
+
 End Class

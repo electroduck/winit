@@ -85,4 +85,10 @@ Public Class Partition
 
         mVolume.InvokeMethod("AddMountPoint", New Object() {strMountPoint})
     End Sub
+
+    Public ReadOnly Property DriveLetter As String
+        Get
+            Return mLogicalDisk("DeviceID")
+        End Get
+    End Property
 End Class

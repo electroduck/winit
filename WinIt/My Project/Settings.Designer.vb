@@ -65,6 +65,18 @@ Namespace My
                 Me("DisclaimerShown") = value
             End Set
         End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+        Public Property TempFolder() As String
+            Get
+                Return CType(Me("TempFolder"),String)
+            End Get
+            Set
+                Me("TempFolder") = value
+            End Set
+        End Property
     End Class
 End Namespace
 

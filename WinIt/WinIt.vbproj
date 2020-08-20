@@ -49,6 +49,9 @@
   <PropertyGroup>
     <ApplicationManifest>My Project\app.manifest</ApplicationManifest>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Resources\hdd.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="DiscUtils.Core, Version=0.15.0.0, Culture=neutral, PublicKeyToken=5fa5b410cc9c6289, processorArchitecture=MSIL">
       <HintPath>..\packages\Quamotion.DiscUtils.Core.0.15.4\lib\net40\DiscUtils.Core.dll</HintPath>
@@ -92,12 +95,14 @@
     <Import Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandFailedException.vb" />
     <Compile Include="DataQuantity.vb" />
     <Compile Include="DiskInternal.vb" />
     <Compile Include="DotNetUtil.vb" />
     <Compile Include="FileLike.vb" />
     <Compile Include="Harddisk.vb" />
     <Compile Include="InstallCancelledException.vb" />
+    <Compile Include="InstallUtil.vb" />
     <Compile Include="ISODownloadHelper.vb" />
     <Compile Include="ListViewEx.Designer.vb">
       <DependentUpon>ListViewEx.vb</DependentUpon>
@@ -182,6 +187,9 @@
       <Project>{c68f87b9-2483-4541-bc96-2caa917156f6}</Project>
       <Name>TaskDialog</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\hdd.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

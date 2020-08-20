@@ -31,6 +31,7 @@ Partial Class MainForm
         Me.ChooseISOBtn = New System.Windows.Forms.Button()
         Me.DiskInstrLbl = New System.Windows.Forms.Label()
         Me.TargetDiskPnl = New Electroduck.UI.Panels.CollapsePanel()
+        Me.TargetListView = New Electroduck.WinIt.ListViewEx()
         Me.TargetIconList = New System.Windows.Forms.ImageList(Me.components)
         Me.TargetInstrLbl = New System.Windows.Forms.Label()
         Me.ProgressPnl = New Electroduck.UI.Panels.CollapsePanel()
@@ -44,7 +45,7 @@ Partial Class MainForm
         Me.InstallWorker = New System.ComponentModel.BackgroundWorker()
         Me.BlockageToolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.InstallHoverCheckTmr = New System.Windows.Forms.Timer(Me.components)
-        Me.TargetListView = New Electroduck.WinIt.ListViewEx()
+        Me.OpenTmr = New System.Windows.Forms.Timer(Me.components)
         Me.MainFlowPnl.SuspendLayout()
         Me.InputFilePnl.SuspendLayout()
         Me.TargetDiskPnl.SuspendLayout()
@@ -180,6 +181,23 @@ Partial Class MainForm
         Me.TargetDiskPnl.TabIndex = 1
         Me.TargetDiskPnl.Text = "2: Target Disk"
         '
+        'TargetListView
+        '
+        Me.TargetListView.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+            Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.TargetListView.BorderStyle = System.Windows.Forms.BorderStyle.None
+        Me.TargetListView.FullRowSelect = True
+        Me.TargetListView.HideSelection = False
+        Me.TargetListView.Location = New System.Drawing.Point(28, 68)
+        Me.TargetListView.Name = "TargetListView"
+        Me.TargetListView.OwnerDraw = True
+        Me.TargetListView.Size = New System.Drawing.Size(518, 53)
+        Me.TargetListView.SmallImageList = Me.TargetIconList
+        Me.TargetListView.TabIndex = 2
+        Me.TargetListView.UseCompatibleStateImageBehavior = False
+        Me.TargetListView.View = System.Windows.Forms.View.SmallIcon
+        '
         'TargetIconList
         '
         Me.TargetIconList.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit
@@ -285,22 +303,9 @@ Partial Class MainForm
         '
         Me.InstallHoverCheckTmr.Enabled = True
         '
-        'TargetListView
+        'OpenTmr
         '
-        Me.TargetListView.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
-            Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.TargetListView.BorderStyle = System.Windows.Forms.BorderStyle.None
-        Me.TargetListView.FullRowSelect = True
-        Me.TargetListView.HideSelection = False
-        Me.TargetListView.Location = New System.Drawing.Point(28, 68)
-        Me.TargetListView.Name = "TargetListView"
-        Me.TargetListView.OwnerDraw = True
-        Me.TargetListView.Size = New System.Drawing.Size(518, 53)
-        Me.TargetListView.SmallImageList = Me.TargetIconList
-        Me.TargetListView.TabIndex = 2
-        Me.TargetListView.UseCompatibleStateImageBehavior = False
-        Me.TargetListView.View = System.Windows.Forms.View.SmallIcon
+        Me.OpenTmr.Enabled = True
         '
         'MainForm
         '
@@ -346,4 +351,5 @@ Partial Class MainForm
     Friend WithEvents InstallPbar As ProgressBar
     Friend WithEvents BlockageToolTip As ToolTip
     Friend WithEvents InstallHoverCheckTmr As Timer
+    Friend WithEvents OpenTmr As Timer
 End Class

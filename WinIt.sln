@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PanelsInternal", "PanelsInt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskDialog", "TaskDialog\TaskDialog.csproj", "{C68F87B9-2483-4541-BC96-2CAA917156F6}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Installer", "Installer\Installer.vdproj", "{F36286B2-855B-4A77-81B2-CD30AB38CB9F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,8 @@ Global
 		{C68F87B9-2483-4541-BC96-2CAA917156F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C68F87B9-2483-4541-BC96-2CAA917156F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C68F87B9-2483-4541-BC96-2CAA917156F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F36286B2-855B-4A77-81B2-CD30AB38CB9F}.Debug|Any CPU.ActiveCfg = Debug
+		{F36286B2-855B-4A77-81B2-CD30AB38CB9F}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
