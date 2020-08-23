@@ -28,7 +28,7 @@
     End Function
 
     Public Sub CopyBootFiles(strWindowsMount As String, strBootMount As String)
-        Dim res As CommandResult = RunCommand(IO.Path.Combine(strWindowsMount, "Windows\System32\bcdboot.exe"),
+        Dim res As CommandResult = RunCommand(IO.Path.Combine(Environment.SystemDirectory, "bcdboot.exe"),
                                               String.Format("{0} /s {1}", IO.Path.Combine(strWindowsMount, "Windows"), strBootMount))
 
         If res.nExitCode <> 0 Then
@@ -37,7 +37,7 @@
     End Sub
 
     Public Sub RegisterRecoveryImage(strWindowsMount As String, strRecoveryMount As String)
-        Dim res As CommandResult = RunCommand(IO.Path.Combine(strWindowsMount, "Windows\System32\Reagentc.exe"),
+        Dim res As CommandResult = RunCommand(IO.Path.Combine(Environment.SystemDirectory, "Reagentc.exe"),
                                               String.Format("/Setreimage /Path {0} /Target {1}",
                                                             IO.Path.Combine(strRecoveryMount, "Recovery\WindowsRE"),
                                                             IO.Path.Combine(strWindowsMount, "Windows")))

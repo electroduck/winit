@@ -1,14 +1,16 @@
-﻿Module Win32Util
+﻿Imports System.Runtime.InteropServices
+
+Module Win32Util
 
     Private Declare Auto Function ExtractIconEx Lib "shell32.dll" _
-        (strFile As String, nIconIndex As Integer, ByRef rhIconLarge As IntPtr,
-         ByRef rhIconSmall As IntPtr, nIcons As UInteger) As UInteger
+        (strFile As String, nIconIndex As IntPtr, ByRef rhIconLarge As IntPtr,
+         ByRef rhIconSmall As IntPtr, nIcons As IntPtr) As IntPtr
 
     Private Declare Ansi Function DestroyIcon Lib "user32.dll" (hIcon As IntPtr) As Boolean
 
     Public Function GetIcon(strFile As String, nIndex As Integer, bSmall As Boolean) As Icon
         Dim hIcon As IntPtr
-        Dim nExtracted As UInteger
+        Dim nExtracted As IntPtr
 
         If bSmall Then
             nExtracted = ExtractIconEx(strFile, nIndex, Nothing, hIcon, 1)
@@ -16,7 +18,7 @@
             nExtracted = ExtractIconEx(strFile, nIndex, hIcon, Nothing, 1)
         End If
 
-        If nExtracted < 1 Or hIcon = IntPtr.Zero Then
+        If CInt(nExtracted) < 1 Or hIcon = IntPtr.Zero Then
             Throw New ComponentModel.Win32Exception(Err.LastDllError)
         End If
 

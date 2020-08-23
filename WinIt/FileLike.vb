@@ -35,7 +35,7 @@ Public Class FileLike
 
     Private Declare Auto Function CreateFile Lib "kernel32.dll" _
         (strPath As String, access As AccessLevel, sm As ShareMode, pSecAttr As IntPtr,
-         cd As CreationDisposition, hTemplate As IntPtr) As IntPtr
+         cd As CreationDisposition, flags As UInteger, hTemplate As IntPtr) As IntPtr
 
     Private Declare Ansi Function DeviceIoControl Lib "kernel32.dll" _
         (hDevice As IntPtr, nCode As Integer, pInBuf As IntPtr, nInBufSize As UInteger,
@@ -92,7 +92,7 @@ Public Class FileLike
         mPath = strPath
         mAccess = access
 
-        mHandle = CreateFile(strPath, access, sm, IntPtr.Zero, cd, IntPtr.Zero)
+        mHandle = CreateFile(strPath, access, sm, IntPtr.Zero, cd, 0, IntPtr.Zero)
         If mHandle = IntPtr.Zero Or mHandle = INVALID_HANDLE_VALUE Then
             Throw New ComponentModel.Win32Exception(Err.LastDllError)
         End If

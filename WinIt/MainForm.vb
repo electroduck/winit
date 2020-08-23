@@ -1,6 +1,8 @@
 ﻿Imports KPreisser.UI
 Imports System.ComponentModel
 
+#Const WINIT_CREATE_RECOVERY_PARTITION = False
+
 Public Class MainForm
     Private mISOMode As Boolean = False
     Private mSourcePath As String = ""
@@ -152,7 +154,7 @@ Public Class MainForm
         Next
     End Sub
 
-    Private Sub TargetListView_SelectedIndexChanged(sender As Object, e As EventArgs)
+    Private Sub TargetListView_SelectedIndexChanged(sender As Object, e As EventArgs) Handles TargetListView.SelectedIndexChanged
         If TargetListView.SelectedIndices.Count = 0 Then
             mTargetDisk = Nothing
         Else
@@ -161,7 +163,7 @@ Public Class MainForm
         CheckCanInstall()
     End Sub
 
-    Private Sub TargetListView_DrawItem(sender As Object, e As DrawListViewItemEventArgs)
+    Private Sub TargetListView_DrawItem(sender As Object, e As DrawListViewItemEventArgs) Handles TargetListView.DrawItem
         If mTargetDisk IsNot Nothing AndAlso e.Item.Tag Is mTargetDisk Then
             e.Graphics.FillRectangle(mSelDiskBrush, e.Bounds)
         End If
@@ -306,7 +308,7 @@ Public Class MainForm
                     End If
 
                     Dim nWIMSize As Long = diskSource.GetFileLength(ISO_PATH_WIM)
-                    strWIMPath = IO.Path.Combine(TempFolder, Guid.NewGuid.ToString("N") & ".iso")
+                    strWIMPath = IO.Path.Combine(TempFolder, Guid.NewGuid.ToString("N") & ".wim")
 
                     'Dim nExtractedBytes As Long = 0
                     'Dim nRead As Long = 0
@@ -346,6 +348,7 @@ Public Class MainForm
             InstallWorker.ReportProgress(-1, "Initializing disk...")
             mTargetDisk.ReinitializeMBR()
 
+#If WINIT_CREATE_RECOVERY_PARTITION Then
             Dim arrParts() As Harddisk.PartitionPrototype = {
                 New Harddisk.PartitionPrototype With { ' System (boot)
                     .bBootable = True,
@@ -360,6 +363,18 @@ Public Class MainForm
                     .nLength = Nothing
                 }
             }
+#Else
+            Dim arrParts() As Harddisk.PartitionPrototype = {
+                New Harddisk.PartitionPrototype With { ' System (boot)
+                    .bBootable = True,
+                    .nLength = DataQuantity.FromMegabytes(100)
+                },
+                New Harddisk.PartitionPrototype With { ' Windows (main)
+                    .bBootable = False,
+                    .nLength = Nothing
+                }
+            }
+#End If
 
             If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
             InstallWorker.ReportProgress(-1, "Partitioning disk...")
@@ -376,14 +391,20 @@ Public Class MainForm
             Dim partBoot As Partition = mTargetDisk.Partition(1)
             partBoot.Format("NTFS", "Boot")
 
+#If WINIT_CREATE_RECOVERY_PARTITION Then
             If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
             InstallWorker.ReportProgress(-1, "Formatting recovery partition...")
             Dim partRecovery As Partition = mTargetDisk.Partition(2)
             partRecovery.Format("NTFS", "Recovery")
+#End If
 
             If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
             InstallWorker.ReportProgress(-1, "Formatting main partition...")
+#If WINIT_CREATE_RECOVERY_PARTITION Then
             Dim partWindows As Partition = mTargetDisk.Partition(3)
+#Else
+            Dim partWindows As Partition = mTargetDisk.Partition(2)
+#End If
             partWindows.Format("NTFS", "Windows")
 
             'If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
@@ -402,7 +423,9 @@ Public Class MainForm
             'partWindows.Mount(strWindowsMount)
 
             Dim strBootMount As String = partBoot.DriveLetter & "\"
+#If WINIT_CREATE_RECOVERY_PARTITION Then
             Dim strRecoveryMount As String = partRecovery.DriveLetter & "\"
+#End If
             Dim strWindowsMount As String = partWindows.DriveLetter & "\"
 
             If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
@@ -504,6 +527,7 @@ Public Class MainForm
             InstallWorker.ReportProgress(-1, "Copying boot files...")
             CopyBootFiles(strWindowsMount, strBootMount)
 
+#If WINIT_CREATE_RECOVERY_PARTITION Then
             If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
             InstallWorker.ReportProgress(-1, "Copying recovery image...")
             Dim strWindowsREDir As String = IO.Path.Combine(strRecoveryMount, "Recovery\WindowsRE")
@@ -523,11 +547,14 @@ Public Class MainForm
             If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
             InstallWorker.ReportProgress(-1, "Registering recovery image...")
             RegisterRecoveryImage(strWindowsMount, strRecoveryMount)
+#End If
 
             If InstallWorker.CancellationPending Then : Throw New InstallCancelledException : End If
             InstallWorker.ReportProgress(-1, "Setting boot and recovery partitions as hidden...")
             partBoot.PartitionType = &H27
+#If WINIT_CREATE_RECOVERY_PARTITION Then
             partRecovery.PartitionType = &H27
+#End If
 
             InstallWorker.ReportProgress(100, "Complete")
         Catch ex As Exception
@@ -585,4 +612,11 @@ Public Class MainForm
         dlgDisclaimer.Show(Me)
     End Sub
 
+    Private Sub OpenTmr_Tick(sender As Object, e As EventArgs) Handles OpenTmr.Tick
+        OpenTmr.Stop()
+        If Not My.Settings.DisclaimerShown Then
+            ShowDisclaimer()
+            My.Settings.DisclaimerShown = True
+        End If
+    End Sub
 End Class

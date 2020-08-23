@@ -1472,8 +1472,8 @@ namespace KPreisser.UI
             }
         }
 
-        [DllImport("ntdll.dll")]
-        private unsafe static extern void RtlCopyMemory(void* pDest, void* pSrc, UIntPtr nLength);
+        [DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
+        private unsafe static extern void* memcpy(void* pDest, void* pSrc, UIntPtr nLength);
 
         private unsafe void BindPageAndAllocateConfig(
                 TaskDialogPage page,
@@ -1655,7 +1655,7 @@ namespace KPreisser.UI
                                         currentPtr,
                                         bytesToCopy,
                                         bytesToCopy);*/
-                                RtlCopyMemory(currentPtr, strPtr, (UIntPtr)bytesToCopy);
+                                memcpy(currentPtr, strPtr, (UIntPtr)bytesToCopy);
 
                                 var ptrToReturn = currentPtr;
                                 currentPtr += bytesToCopy;

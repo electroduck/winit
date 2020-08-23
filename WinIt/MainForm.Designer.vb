@@ -317,7 +317,7 @@ Partial Class MainForm
         Me.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
         Me.MinimumSize = New System.Drawing.Size(600, 38)
         Me.Name = "MainForm"
-        Me.Text = "MainForm"
+        Me.Text = "WinIt"
         Me.MainFlowPnl.ResumeLayout(False)
         Me.InputFilePnl.ResumeLayout(False)
         Me.InputFilePnl.PerformLayout()
